@@ -619,6 +619,7 @@ package com.itma.gestionProjet.services.imp;
 import com.itma.gestionProjet.dtos.*;
 import com.itma.gestionProjet.entities.DatabasePapAgricole;
 import com.itma.gestionProjet.entities.Project;
+import com.itma.gestionProjet.helpers.StatsHelper;
 import com.itma.gestionProjet.repositories.DatabasePapAgricoleRepository;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.services.DatabasePapAgricoleService;
@@ -646,6 +647,8 @@ public class DatabasePapAgricoleServiceImpl implements DatabasePapAgricoleServic
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private StatsHelper statsHelper;
 
     @Override
     public List<DatabasePapAgricoleResponseDTO> getAllDatabasePapAgricole(int page, int size) {
@@ -1195,5 +1198,23 @@ public class DatabasePapAgricoleServiceImpl implements DatabasePapAgricoleServic
     // Méthode utilitaire pour vérifier l'existence des IDs
     public boolean existAllByIds(List<Long> ids) {
         return repository.countByIdIn(ids) == ids.size();
+    }
+
+    @Override
+    public CategoryStats getCategoryStats(Long projectId) {
+        List<DatabasePapAgricole> paps = repository
+                .findByProjectId(projectId, PageRequest.of(0, 10_000_000))
+                .getContent();
+
+        double totalPerte = paps.stream()
+                .mapToDouble(p -> p.getPerteTotale() != null ? p.getPerteTotale() : 0.0)
+                .sum();
+
+        return statsHelper.buildCategoryStats(
+                paps,
+                DatabasePapAgricole::getSexe,
+                DatabasePapAgricole::getVulnerabilite,
+                totalPerte
+        );
     }
 }

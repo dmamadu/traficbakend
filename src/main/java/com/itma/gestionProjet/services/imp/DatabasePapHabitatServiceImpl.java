@@ -302,10 +302,12 @@
 
 package com.itma.gestionProjet.services.imp;
 
+import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatRequestDTO;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatResponseDTO;
 import com.itma.gestionProjet.entities.DatabasePapHabitat;
 import com.itma.gestionProjet.entities.Project;
+import com.itma.gestionProjet.helpers.StatsHelper;
 import com.itma.gestionProjet.repositories.DatabasePapHabitatRepository;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
@@ -334,6 +336,9 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private StatsHelper statsHelper;
 
     @Override
     public void create(List<DatabasePapHabitatRequestDTO> requestDTOs) {
@@ -799,5 +804,23 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
             return false;
         }
         return repository.countByIdIn(ids) == ids.size();
+    }
+
+    @Override
+    public CategoryStats getCategoryStats(Long projectId) {
+        List<DatabasePapHabitat> paps = repository
+                .findByProjectId(projectId, PageRequest.of(0, 10_000_000))
+                .getContent();
+
+        double totalPerte = paps.stream()
+                .mapToDouble(p -> p.getPerteTotale() != null ? p.getPerteTotale() : 0.0)
+                .sum();
+
+        return statsHelper.buildCategoryStats(
+                paps,
+                DatabasePapHabitat::getSexe,
+                DatabasePapHabitat::getVulnerabilite,
+                totalPerte
+        );
     }
 }

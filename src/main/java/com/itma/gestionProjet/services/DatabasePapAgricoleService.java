@@ -1,9 +1,6 @@
 package com.itma.gestionProjet.services;
 
-import com.itma.gestionProjet.dtos.DatabasePapAgricoleRequestDTO;
-import com.itma.gestionProjet.dtos.DatabasePapAgricoleResponseDTO;
-import com.itma.gestionProjet.dtos.DatabasePapPlaceAffaireResponseDTO;
-import com.itma.gestionProjet.dtos.PlainteDto;
+import com.itma.gestionProjet.dtos.*;
 import com.itma.gestionProjet.entities.DatabasePapAgricole;
 import com.itma.gestionProjet.entities.DatabasePapPlaceAffaire;
 import org.springframework.data.domain.Page;
@@ -44,5 +41,8 @@ public interface DatabasePapAgricoleService {
     void deleteAllByIds(List<Long> ids);
 
     void deleteAllByProjectId(Long projectId);
+
+    CategoryStats getCategoryStats(Long projectId); // ← ajouter ça
+
 }
 

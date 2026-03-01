@@ -1,4 +1,5 @@
 package com.itma.gestionProjet.services;
+import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatRequestDTO;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatResponseDTO;
 
@@ -27,4 +28,6 @@ public interface DatabasePapHabitatService {
 
     // Méthode utilitaire pour vérifier l'existence
     boolean existAllByIds(List<Long> ids);
+
+    CategoryStats getCategoryStats(Long projectId);
 }

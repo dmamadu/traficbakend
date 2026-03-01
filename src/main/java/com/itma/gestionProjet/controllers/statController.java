@@ -109,7 +109,10 @@
 
 package com.itma.gestionProjet.controllers;
 
+import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.CombinedStatsResponse;
+import com.itma.gestionProjet.dtos.CriterionStats;
+import com.itma.gestionProjet.helpers.StatsHelper;
 import com.itma.gestionProjet.services.DatabasePapAgricoleService;
 import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
@@ -119,7 +122,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -135,27 +140,86 @@ public class statController {
     private DatabasePapHabitatService databasePapHabitatService;
 
 
+    @Autowired
 
+    private  StatsHelper statsHelper;
+    @Autowired
+
+    private  DatabasePapPlaceAffaireService placeAffaireService;
+    @Autowired
+
+    private  DatabasePapAgricoleService agricoleService;
+    @Autowired
+
+    private  DatabasePapHabitatService habitatService;
+
+
+
+
+//    @GetMapping("/combine")
+//    public CombinedStatsResponse getCombinedStats(@RequestParam(required = false) Long projectId) {
+//        // Récupérer les stats existantes
+//        Map<String, Object> placeAffaire = databasePapPlaceAffaireService.getVulnerabilityStats(projectId);
+//        Map<String, Object> agricole = databasePapAgricoleService.getVulnerabilityStats(projectId);
+//        Map<String, Object> habitat = databasePapHabitatService.getVulnerabilityStats(projectId);
+//
+//        // Ajouter les stats de pertes
+//        placeAffaire.put("statsPertes", getPerteStats(databasePapPlaceAffaireService, projectId));
+//        agricole.put("statsPertes", getPerteStats(databasePapAgricoleService, projectId));
+//        habitat.put("statsPertes", getPerteStats(databasePapHabitatService, projectId));
+//
+//        // Créer la réponse combinée
+//        CombinedStatsResponse response = new CombinedStatsResponse();
+//        response.setPlaceAffaireStats(placeAffaire);
+//        response.setAgricoleStats(agricole);
+//        response.setHabitatStats(habitat);
+//        response.setTotalStats(calculateTotalStats(placeAffaire, agricole, habitat));
+//
+//        return response;
+//    }
     @GetMapping("/combine")
     public CombinedStatsResponse getCombinedStats(@RequestParam(required = false) Long projectId) {
-        // Récupérer les stats existantes
-        Map<String, Object> placeAffaire = databasePapPlaceAffaireService.getVulnerabilityStats(projectId);
-        Map<String, Object> agricole = databasePapAgricoleService.getVulnerabilityStats(projectId);
-        Map<String, Object> habitat = databasePapHabitatService.getVulnerabilityStats(projectId);
 
-        // Ajouter les stats de pertes
-        placeAffaire.put("statsPertes", getPerteStats(databasePapPlaceAffaireService, projectId));
-        agricole.put("statsPertes", getPerteStats(databasePapAgricoleService, projectId));
-        habitat.put("statsPertes", getPerteStats(databasePapHabitatService, projectId));
+        CategoryStats paStats  = placeAffaireService.getCategoryStats(projectId);
+        CategoryStats agStats  = agricoleService.getCategoryStats(projectId);
+        CategoryStats habStats = habitatService.getCategoryStats(projectId);
 
-        // Créer la réponse combinée
+        // Total = addition des 3
+        CategoryStats totalStats = buildTotal(paStats, agStats, habStats);
+
         CombinedStatsResponse response = new CombinedStatsResponse();
-        response.setPlaceAffaireStats(placeAffaire);
-        response.setAgricoleStats(agricole);
-        response.setHabitatStats(habitat);
-        response.setTotalStats(calculateTotalStats(placeAffaire, agricole, habitat));
+        response.setPlaceAffaireStats(paStats);
+        response.setAgricoleStats(agStats);
+        response.setHabitatStats(habStats);
+        response.setTotalStats(totalStats);
+        response.setSummary(statsHelper.buildSummary(paStats, agStats, habStats));
 
         return response;
+    }
+
+    private CategoryStats buildTotal(CategoryStats... stats) {
+        CategoryStats total = new CategoryStats();
+        total.setTotal(Arrays.stream(stats).mapToLong(CategoryStats::getTotal).sum());
+        total.setHommes(Arrays.stream(stats).mapToLong(CategoryStats::getHommes).sum());
+        total.setFemmes(Arrays.stream(stats).mapToLong(CategoryStats::getFemmes).sum());
+        total.setAutre(Arrays.stream(stats).mapToLong(CategoryStats::getAutre).sum());
+        total.setTotalVulnerables(Arrays.stream(stats).mapToLong(CategoryStats::getTotalVulnerables).sum());
+        total.setVulnerablesHommes(Arrays.stream(stats).mapToLong(CategoryStats::getVulnerablesHommes).sum());
+        total.setVulnerablesFemmes(Arrays.stream(stats).mapToLong(CategoryStats::getVulnerablesFemmes).sum());
+        total.setTotalPerte(Arrays.stream(stats).mapToDouble(CategoryStats::getTotalPerte).sum());
+        long t = total.getTotal();
+        total.setPercentHommes(t > 0 ? (total.getHommes() * 100.0 / t) : 0);
+        total.setPercentFemmes(t > 0 ? (total.getFemmes() * 100.0 / t) : 0);
+        // Critères : additionner clé par clé
+        Map<String, CriterionStats> criteresTotal = new LinkedHashMap<>();
+        stats[0].getCriteresVulnerabilite().forEach((key, val) -> {
+            long th = Arrays.stream(stats).mapToLong(s -> s.getCriteresVulnerabilite().get(key).getHommes()).sum();
+            long tf = Arrays.stream(stats).mapToLong(s -> s.getCriteresVulnerabilite().get(key).getFemmes()).sum();
+            long ta = Arrays.stream(stats).mapToLong(s -> s.getCriteresVulnerabilite().get(key).getAutre()).sum();
+            criteresTotal.put(key, new CriterionStats(th + tf + ta, th, tf, ta));
+        });
+        total.setCriteresVulnerabilite(criteresTotal);
+        return total;
     }
 
     private Map<String, Double> getPerteStats(Object service, Long projectId) {

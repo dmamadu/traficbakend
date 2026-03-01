@@ -1,11 +1,11 @@
 package com.itma.gestionProjet.services;
 
 
-import com.amazonaws.util.IOUtils;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

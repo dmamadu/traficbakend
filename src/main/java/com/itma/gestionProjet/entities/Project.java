@@ -46,6 +46,7 @@ public class Project {
            inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
    )
    @ToString.Exclude
+   @Builder.Default
    private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)

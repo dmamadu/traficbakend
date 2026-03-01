@@ -106,6 +106,7 @@ public class Entente {
     @CollectionTable(name = "entente_modifications", joinColumns = @JoinColumn(name = "entente_id"))
     @MapKeyColumn(name = "modification_key")
     @Column(name = "modification_value", columnDefinition = "TEXT")
+    @Builder.Default
     private Map<String, String> historiqueModifications = new HashMap<>();
 
 

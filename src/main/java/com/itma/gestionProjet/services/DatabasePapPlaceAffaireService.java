@@ -1,5 +1,6 @@
 package com.itma.gestionProjet.services;
 
+import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.DatabasePapPlaceAffaireRequestDTO;
 import com.itma.gestionProjet.dtos.DatabasePapPlaceAffaireResponseDTO;
 import com.itma.gestionProjet.entities.DatabasePapPlaceAffaire;
@@ -23,4 +24,7 @@ public interface DatabasePapPlaceAffaireService {
     public  Map<String, Object> getVulnerabilityStats(Long projectId);
     void deleteAllByProjectId(Long projectId);
     void deleteAllByIds(List<Long> ids);
+
+    CategoryStats getCategoryStats(Long projectId); // ← ajouter ça
+
 }
