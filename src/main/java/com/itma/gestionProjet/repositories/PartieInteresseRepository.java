@@ -29,4 +29,6 @@ public interface PartieInteresseRepository extends JpaRepository<PartieInteresse
     Optional<PartieInteresse> findBycourrielPrincipal(String courrielPrincipal);
 
     Optional<PartieInteresse> findByCourrielPrincipal(String courrielPrincipal);
+
+    Page<PartieInteresse> findByCategorie(String categorie, Pageable pageable);
 }

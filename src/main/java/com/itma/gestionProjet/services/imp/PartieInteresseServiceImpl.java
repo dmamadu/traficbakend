@@ -117,7 +117,7 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
         pip.setLocalisation(dto.getLocalisation());
         pip.setCourrielPrincipal(dto.getCourrielPrincipal());
         pip.setStatut(dto.getStatut());
-        pip.setNormes(dto.getNormes());
+//        pip.setNormes(dto.getNormes());
         pip.setCategorie(dto.getCategorie());
         pip.setProject(project);
         return pip;
@@ -203,6 +203,12 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
 
 
     @Override
+    public Page<PartieInteresse> getByCategorieLibelle(String categorie, Pageable pageable) {
+        return repository.findByCategorie(categorie, pageable);
+    }
+
+
+    @Override
     public PartieInteresse update(Long id, PartieInteresseResponseDTO partieInteresseDTO) {
         Optional<PartieInteresse> optionalPip = repository.findById(id);
         if (!optionalPip.isPresent()) {
@@ -215,7 +221,7 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
         pip.setAdresse(partieInteresseDTO.getAdresse());
         pip.setLocalisation(partieInteresseDTO.getLocalisation());
         pip.setCourrielPrincipal(partieInteresseDTO.getCourrielPrincipal());
-        pip.setNormes(partieInteresseDTO.getNormes());
+//        pip.setNormes(partieInteresseDTO.getNormes());
         pip.setStatut(partieInteresseDTO.getStatut());
         pip.setCategorie(partieInteresseDTO.getCategorie());
 
@@ -307,7 +313,7 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
         responseDTO.setLibelle(partieInteresse.getLibelle());
         responseDTO.setCategorie(partieInteresse.getCategorie());
         responseDTO.setLocalisation(partieInteresse.getLocalisation());
-        responseDTO.setNormes(partieInteresse.getNormes());
+//        responseDTO.setNormes(partieInteresse.getNormes());
         responseDTO.setStatut(partieInteresse.getStatut());
         responseDTO.setProject_id(partieInteresse.getProject().getId());
 

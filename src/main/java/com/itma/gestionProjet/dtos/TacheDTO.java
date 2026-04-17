@@ -1,5 +1,7 @@
 package com.itma.gestionProjet.dtos;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lombok.Data;
@@ -16,4 +18,5 @@ public class TacheDTO {
     private Date dateFin;
     private String statut;
     private Set<ConsultantResponse> utilisateurs    ;
+    private String observation;
 }

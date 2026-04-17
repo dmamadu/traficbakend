@@ -22,4 +22,6 @@ public interface PartieInteresseService {
     Page<PartieInteresse> getPartieInteresses(Pageable pageable);
 
     PartieInteresse  update(Long id, PartieInteresseResponseDTO partieInteresse);
+
+    Page<PartieInteresse> getByCategorieLibelle(String categorieLibelle, Pageable pageable);
 }

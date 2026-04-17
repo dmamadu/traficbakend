@@ -56,6 +56,51 @@ public class PartieInteresseController {
      */
 
 
+//    @GetMapping
+//    public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> getAll(
+//            @RequestParam(defaultValue = "0") int offset,
+//            @RequestParam(defaultValue = "10") int max,
+//            @RequestParam(required = false) String categorieLibelle,
+//            @RequestParam(required = false) Long projectId) {
+//
+//        try {
+//            Pageable pageable = PageRequest.of(offset, max);
+//            Page<PartieInteresse> partieInteressePage;
+//
+//            // Vérifier si projectId est fourni
+//            if (projectId != null) {
+//                // Appeler la méthode pour récupérer les PartieInteresse par projectId
+//                partieInteressePage = service.getPartieInteressesByProjectId(projectId, pageable);
+//            } else {
+//                // Appeler la méthode pour récupérer toutes les PartieInteresse
+//                partieInteressePage = service.getPartieInteresses(pageable);
+//            }
+//
+//            // Convertir les entités PartieInteresse en DTO
+//            List<PartieInteresseResponseDTO> dtoList = partieInteressePage.getContent().stream()
+//                    .map(this::convertToDTO) // Assurez-vous que cette méthode est définie
+//                    .collect(Collectors.toList());
+//
+//            // Construire la réponse AApiResponse
+//            AApiResponse<PartieInteresseResponseDTO> response = new AApiResponse<>();
+//            response.setResponseCode(200);
+//            response.setData(dtoList);
+//            response.setOffset(offset);
+//            response.setMax(max);
+//            response.setLength(partieInteressePage.getTotalElements());
+//            response.setMessage("Données récupérées avec succès.");
+//
+//            return ResponseEntity.ok().body(response);
+//        } catch (Exception e) {
+//            // Gestion des erreurs
+//            AApiResponse<PartieInteresseResponseDTO> errorResponse = new AApiResponse<>();
+//            errorResponse.setResponseCode(500);
+//            errorResponse.setMessage("Erreur lors de la récupération des données : " + e.getMessage());
+//            return ResponseEntity.status(500).body(errorResponse);
+//        }
+//    }
+
+
     @GetMapping
     public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> getAll(
             @RequestParam(defaultValue = "0") int offset,
@@ -67,21 +112,25 @@ public class PartieInteresseController {
             Pageable pageable = PageRequest.of(offset, max);
             Page<PartieInteresse> partieInteressePage;
 
-            // Vérifier si projectId est fourni
+            // 🔥 PRIORITÉ 1 : Filtrer par projet
             if (projectId != null) {
-                // Appeler la méthode pour récupérer les PartieInteresse par projectId
                 partieInteressePage = service.getPartieInteressesByProjectId(projectId, pageable);
-            } else {
-                // Appeler la méthode pour récupérer toutes les PartieInteresse
+            }
+
+            // 🔥 PRIORITÉ 2 : Filtrer par catégorie (CE QUI MANQUE ACTUELLEMENT)
+            else if (categorieLibelle != null && !categorieLibelle.isEmpty()) {
+                partieInteressePage = service.getByCategorieLibelle(categorieLibelle, pageable);
+            }
+
+            // 🔥 PAR DÉFAUT : Tout récupérer
+            else {
                 partieInteressePage = service.getPartieInteresses(pageable);
             }
 
-            // Convertir les entités PartieInteresse en DTO
             List<PartieInteresseResponseDTO> dtoList = partieInteressePage.getContent().stream()
-                    .map(this::convertToDTO) // Assurez-vous que cette méthode est définie
+                    .map(this::convertToDTO)
                     .collect(Collectors.toList());
 
-            // Construire la réponse AApiResponse
             AApiResponse<PartieInteresseResponseDTO> response = new AApiResponse<>();
             response.setResponseCode(200);
             response.setData(dtoList);
@@ -91,15 +140,14 @@ public class PartieInteresseController {
             response.setMessage("Données récupérées avec succès.");
 
             return ResponseEntity.ok().body(response);
+
         } catch (Exception e) {
-            // Gestion des erreurs
             AApiResponse<PartieInteresseResponseDTO> errorResponse = new AApiResponse<>();
             errorResponse.setResponseCode(500);
-            errorResponse.setMessage("Erreur lors de la récupération des données : " + e.getMessage());
+            errorResponse.setMessage("Erreur : " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
-
 
 
     @GetMapping("/{id}")
@@ -187,7 +235,7 @@ public class PartieInteresseController {
         responseDTO.setLibelle(partieInteresse.getLibelle());
         responseDTO.setCategorie(partieInteresse.getCategorie());
         responseDTO.setLocalisation(partieInteresse.getLocalisation());
-        responseDTO.setNormes(partieInteresse.getNormes());
+//        responseDTO.setNormes(partieInteresse.getNormes());
         responseDTO.setStatut(partieInteresse.getStatut());
         responseDTO.setProject_id(partieInteresse.getProject().getId());
 

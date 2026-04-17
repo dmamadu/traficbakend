@@ -20,7 +20,7 @@ public class PartieInteresse {
     private String statut;
     private String courrielPrincipal;
     private String adresse;
-    private String normes;
+//    private String normes;
     private String localisation;
     private String categorie;
 

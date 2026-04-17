@@ -13,7 +13,7 @@ public class PartieInteresseResponseDTO {
     private String libelle;
     private String categorie;
     private String localisation;
-    private String normes;
+//    private String normes;
     private String statut;
     private Long project_id;
 
