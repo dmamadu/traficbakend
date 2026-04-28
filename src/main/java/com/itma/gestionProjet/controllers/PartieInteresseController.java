@@ -26,6 +26,8 @@ public class PartieInteresseController {
     private PartieInteresseService service;
     
     /*
+
+
     @GetMapping
     public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> getAll(
             @RequestParam(defaultValue = "0") int offset,

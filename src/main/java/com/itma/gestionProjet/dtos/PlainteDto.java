@@ -1,41 +1,60 @@
 package com.itma.gestionProjet.dtos;
 
-
 import lombok.Data;
 
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PlainteDto {
 
     private Long id;
-    private String numeroDossier;
-    private String lieuEnregistrement;
-    private Date dateEnregistrement;
-    private  String libelleProjet;
-    private Boolean isRecensed;
-    private Boolean isSignedFileRecensement;  // Correspond à la classe Entity
-    private Date dateRecensement;  // Correspond à la classe Entity
-    private String natureBienAffecte;  // Correspond à la classe Entity
-    private String emplacementBienAffecte;  // Correspond à la classe Entity
-    private String typeIdentification;
-    private String numeroIdentification;
-    private Long projectId;  // Correspond à l'identifiant du projet
-    private String contact;  // Correspond à la classe Entity
-    private String prenom;
-    private String nom;
+
+    // Identification
+    private String statut;
+    private String numeroReference;
+    private LocalDate dateEnregistrement;
+    private LocalDate moisReception;
+
+    // PAP
     private String codePap;
-    private String vulnerabilite;
-    private String email;  // Correspond à la classe Entity
-    private String situationMatrimoniale;
-    private String descriptionObjet;
-    private Boolean hasDocument;  // Correspond à la classe Entity
-    private String recommandation;
-    private String etat;
+    private String nomPrenom;
+    private String mandataire;
+    private String sexe;
+    private String telephone;
+    private String perimetreGmp;
+    private String numeroParcelle;
+    private String typeCarteIdentite;
+    private String cin;
+    private String typePap;
+    private String villageQuartier;
+    private String plainteParZone;
 
-    private List<String> documentUrls;  // Liste des URL des documents associés
+    // Plainte
+    private String categorisation;
+    private String objetPlainte;
+    private String niveauGravite;
+    private String descriptionPlainte;
+    private String facilitateur;
 
-    private String urlSignaturePap;  // Correspond à la classe Entity
-    private String urlSignatureResponsable;  // Correspond à la classe Entity
+    // Résolution
+    private String descriptionReglement;
+    private String observations;
+    private String communicationResolution1;
+    private LocalDate dateTraitementConsultant;
+    private LocalDate dateVisite;
+    private String communicationResolution2;
+    private LocalDate dateTraitementClm;
+    private String communicationResolution3;
+    private LocalDate dateTraitementCcd;
+    private String resolutionPlainte;
+    private String siNonExpliquez;
+    private String prochaineEtape;
+    private LocalDate dateCloture;
+    private String delaiResolution;
+
+    // Projet & Audit
+    private Long projectId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

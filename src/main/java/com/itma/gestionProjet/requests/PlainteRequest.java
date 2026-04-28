@@ -2,42 +2,54 @@ package com.itma.gestionProjet.requests;
 
 import lombok.Data;
 
-import java.util.Date;
-import java.util.List;
-
-
-import java.util.Date;
-import java.util.List;
-import lombok.Data;
+import java.time.LocalDate;
 
 @Data
 public class PlainteRequest {
-    private String numeroDossier;
-    private  String libelleProjet;
-    private String lieuEnregistrement;
-    private Date dateEnregistrement;
-    private Boolean isRecensed;
-    private Boolean isSignedFileRecensement;
-    private Date dateRecensement;
-    private String natureBienAffecte;
-    private String emplacementBienAffecte;
-    private String typeIdentification;
-    private String numeroIdentification;
-    private Long projectId;
-    private String contact;
-    private String prenom;
-    private String nom;
+
+    // Identification
+    private String statut;
+    private String numeroReference;
+    private LocalDate dateEnregistrement;
+    private LocalDate moisReception;
+
+    // PAP
     private String codePap;
-    private String vulnerabilite;
-    private String email;
-    private String situationMatrimoniale;
-    private String descriptionObjet;
-    private Boolean hasDocument;
-    private String recommandation;
-    private String etat;
+    private String nomPrenom;
+    private String mandataire;
+    private String sexe;
+    private String telephone;
+    private String perimetreGmp;
+    private String numeroParcelle;
+    private String typeCarteIdentite;
+    private String cin;
+    private String typePap;
+    private String villageQuartier;
+    private String plainteParZone;
 
-    private List<String> documentUrls;
+    // Plainte
+    private String categorisation;
+    private String objetPlainte;
+    private String niveauGravite;
+    private String descriptionPlainte;
+    private String facilitateur;
 
-    private String urlSignaturePap;
-    private String urlSignatureResponsable;
+    // Résolution
+    private String descriptionReglement;
+    private String observations;
+    private String communicationResolution1;
+    private LocalDate dateTraitementConsultant;
+    private LocalDate dateVisite;
+    private String communicationResolution2;
+    private LocalDate dateTraitementClm;
+    private String communicationResolution3;
+    private LocalDate dateTraitementCcd;
+    private String resolutionPlainte;
+    private String siNonExpliquez;
+    private String prochaineEtape;
+    private LocalDate dateCloture;
+    private String delaiResolution;
+
+    // Projet
+    private Long projectId;
 }
