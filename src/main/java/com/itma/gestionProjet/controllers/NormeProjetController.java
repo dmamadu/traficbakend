@@ -7,6 +7,7 @@ import com.itma.gestionProjet.entities.NormeProjet;
 import com.itma.gestionProjet.requests.NormeProjetRequest;
 import com.itma.gestionProjet.services.imp.NormeProjetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,5 +39,19 @@ public class NormeProjetController {
         return normeProjetService.saveNormeProjet(normeProjects, projectId);
     }
 
-    
+    @GetMapping("/project/{projectId}")
+    public List<NormeProjet> getByProject(@PathVariable Long projectId) {
+        return normeProjetService.findByProjectId(projectId);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        normeProjetService.deleteNormeProjetById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/updateNorme/{projectId}")
+    public NormeProjet updateNorme(@RequestBody NormeProjet normeProjet, @PathVariable Long projectId) {
+        return normeProjetService.updateSingleNorme(normeProjet);
+    }
 }

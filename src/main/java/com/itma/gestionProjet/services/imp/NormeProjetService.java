@@ -99,7 +99,21 @@ public class NormeProjetService  implements INormeProjet {
 
     @Override
     public void deleteNormeProjetById(Long id) {
+        normeProjectRepository.deleteById(id);
+    }
 
+    @Override
+    public List<NormeProjet> findByProjectId(Long projectId) {
+        return normeProjectRepository.findByProjectId(projectId);
+    }
+
+    @Override
+    public NormeProjet updateSingleNorme(NormeProjet normeProjet) {
+        NormeProjet existing = normeProjectRepository.findById((long) normeProjet.getId())
+                .orElseThrow(() -> new EntityNotFoundException("NormeProjet not found with id: " + normeProjet.getId()));
+        existing.setTitre(normeProjet.getTitre());
+        existing.setDescription(normeProjet.getDescription());
+        return normeProjectRepository.save(existing);
     }
 
     @Override

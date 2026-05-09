@@ -27,6 +27,10 @@ public interface INormeProjet {
 
     void deleteNormeProjetById(Long id);
 
+    List<NormeProjet> findByProjectId(Long projectId);
+
+    NormeProjet updateSingleNorme(NormeProjet normeProjet);
+
     NormeProjetDTO convertEntityToDto(NormeProjet p);
 
     NormeProjet convertDtoToEntity(NormeProjetRequest normeProjetRequest);
