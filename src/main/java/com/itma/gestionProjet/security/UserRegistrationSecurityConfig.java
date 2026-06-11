@@ -77,7 +77,8 @@ public class UserRegistrationSecurityConfig {
                                 "https://invodis.com",
                                 "https://www.invodis.com",
                                 "http://invodis.com",
-                                "http://www.invodis.com"
+                                "http://www.invodis.com",
+                                "https://invodis.fereya.dev"
                         ));
                         cors.setAllowedMethods(Collections.singletonList("*"));
                         cors.setAllowedHeaders(Collections.singletonList("*"));
