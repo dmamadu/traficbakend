@@ -51,6 +51,8 @@ List<User> getUsersByRoleName(String username);
 
     boolean oldPasswordIsValid(User user, String oldPassword);
 
+    User toggleEnabled(Long id);
+
 
 
 

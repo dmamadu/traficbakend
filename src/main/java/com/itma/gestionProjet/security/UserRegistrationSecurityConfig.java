@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 
 @Configuration
@@ -33,7 +32,8 @@ public class UserRegistrationSecurityConfig {
     private static final String[] UN_SECURED_URLs = {
             "/users/**",
             "/image/**",
-            "projects/**"
+            "projects/**",
+            "/geolocation/**"
     };
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -80,8 +80,8 @@ public class UserRegistrationSecurityConfig {
                                 "http://www.invodis.com",
                                 "https://invodis.fereya.dev"
                         ));
-                        cors.setAllowedMethods(Collections.singletonList("*"));
-                        cors.setAllowedHeaders(Collections.singletonList("*"));
+                        cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+                        cors.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
                         cors.setExposedHeaders(Collections.singletonList("Authorization"));
                         return cors;
                     }
@@ -90,7 +90,7 @@ public class UserRegistrationSecurityConfig {
                 .requestMatchers(UN_SECURED_URLs).permitAll().and()
                 .authorizeHttpRequests().requestMatchers(SECURED_URLs)
                 .hasAuthority("Super Admin").anyRequest()
-                .permitAll()
+                .authenticated()
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

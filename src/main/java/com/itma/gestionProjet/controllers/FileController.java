@@ -23,7 +23,7 @@ public class FileController {
     @Autowired
     ProjectService projectService;
 
-    @PostMapping(value = "/uplaodFilesProd/{idProd}" )
+    @PostMapping(value = "/uploadFilesProd/{idProd}" )
     public File uploadMultiImages(@RequestParam("file") MultipartFile file,
                                   @PathVariable("idProd") Long idProd)
             throws IOException {

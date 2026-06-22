@@ -8,6 +8,7 @@ import com.itma.gestionProjet.services.PlainteUserService;
 import com.itma.gestionProjet.utils.EmailService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,9 @@ public class PlainteUserController {
 
     private final PlainteUserService plainteUserService;
     private final EmailService emailService;
+
+    @Value("${app.support.mail}")
+    private String supportMail;
 
 
 
@@ -59,7 +63,7 @@ public class PlainteUserController {
         /*Information mail admin ------------*/
         MailRequestDto mailRequestDto = new MailRequestDto();
         mailRequestDto.setSubject(dto.getComplaintType());
-        mailRequestDto.setToEmail("babacar77979204@gmail.com");
+        mailRequestDto.setToEmail(supportMail);
         mailRequestDto.setMessage(messagePlainte);
         mailRequestDto.setTemplate("reclamation_emails");
         /* ---------------fin info mail admin*/

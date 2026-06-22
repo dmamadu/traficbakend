@@ -53,7 +53,7 @@ public class StatsHelper {
             else if ("Femmes".equals(genderKey)) femmes++;
             else autre++;
 
-            boolean isNonVuln = vuln == null || vuln.equals("Non vulnérable");
+            boolean isNonVuln = vuln == null || vuln.trim().equalsIgnoreCase("Non vulnérable");
             if (isNonVuln) {
                 nonVulnerables++;
             } else {

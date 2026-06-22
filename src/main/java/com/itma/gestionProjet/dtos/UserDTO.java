@@ -22,4 +22,5 @@ public class UserDTO {
     private DtoFonction fonction;
    // private  List<ProjectDTOUSER> projects;
    private Set<ProjectDTO> projects;
+   private Boolean mustChangePassword;
 }

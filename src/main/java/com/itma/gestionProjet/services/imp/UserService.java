@@ -89,6 +89,7 @@ public class UserService  implements IUserService {
       //  newUser.setLocality(p.getLocality());
         newUser.setImageUrl(p.getImageUrl());
         newUser.setEnabled(true);
+        newUser.setMustChangePassword(true);
         // Génération du mot de passe encodé
         String rawPassword ="Passer@123"; // ou générer un mot de passe aléatoire si vous préférez
         String encodedPassword = bCryptPasswordEncoder.encode(rawPassword);
@@ -173,6 +174,7 @@ public class UserService  implements IUserService {
         newUser.setContact(p.getContact());
         newUser.setLocality(p.getLocality());
         newUser.setEnabled(true);
+        newUser.setMustChangePassword(true);
         newUser.setPassword(bCryptPasswordEncoder.encode("Passer@123"));
         newUser.setImageUrl(p.getImageUrl());
 
@@ -248,6 +250,7 @@ public class UserService  implements IUserService {
         newUser.setContact(p.getContact());
        // newUser.setLocality(p.getLocality());
         newUser.setEnabled(true);
+        newUser.setMustChangePassword(true);
         newUser.setPassword(bCryptPasswordEncoder.encode("Passer@123"));
         newUser.setImageUrl(p.getImageUrl());
 
@@ -439,7 +442,8 @@ public class UserService  implements IUserService {
         Set<ProjectDTO> projects = user.getProjects().stream()
                 .map(this::convertProjectEntityToDto)
                 .collect(Collectors.toSet());
-        userDTO.setProjects(projects);;
+        userDTO.setProjects(projects);
+        userDTO.setMustChangePassword(user.getMustChangePassword());
         return userDTO;
     }
 
@@ -505,6 +509,14 @@ public class UserService  implements IUserService {
     @Override
     public boolean oldPasswordIsValid(User user, String oldPassword){
         return bCryptPasswordEncoder.matches(oldPassword, user.getPassword());
+    }
+
+    @Override
+    public User toggleEnabled(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé avec l'id " + id));
+        user.setEnabled(!Boolean.TRUE.equals(user.getEnabled()));
+        return userRepository.save(user);
     }
 
 

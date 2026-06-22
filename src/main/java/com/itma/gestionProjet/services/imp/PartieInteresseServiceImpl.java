@@ -165,9 +165,9 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
 
         // Récupération rôle et catégorie avec vérification
 
-        Role role = roleRepository.findRoleByName("Representant Principal");
+        Role role = roleRepository.findRoleByName("Representant principal");
         if (role == null) {
-            throw new EntityNotFoundException("Rôle 'Representant Principal' non trouvé");
+            throw new EntityNotFoundException("Rôle 'Representant principal' non trouvé");
         }
 
         Categorie categorie = categorieRepository.findByLibelle("Niveau 2");

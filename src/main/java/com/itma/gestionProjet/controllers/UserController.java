@@ -200,13 +200,16 @@ public class UserController {
             return   new ApiResponse(400,"Invalid token",null);
         }
         */
+        if (!tokenVerificationResult.equalsIgnoreCase("valid")) {
+            return new ApiResponse(400, "Invalid password reset token", null);
+        }
         Optional<User> theUser = Optional.ofNullable(userService.findUserByToken(token));
         if (theUser.isPresent()) {
             userService.changePassword(theUser.get(), passwordRequestUtil.getNewPassword());
             userService.deletePasswordResetToken(token);
-            return new ApiResponse(400,"Password has been reset successfully",null);
+            return new ApiResponse(200, "Password has been reset successfully", null);
         }
-        return new ApiResponse(400," Invalid password reset token",null);
+        return new ApiResponse(404, "User not found for this token", null);
     }
 
 
@@ -235,6 +238,7 @@ public class UserController {
             return new ApiResponse(400, "Le nouveau mot de passe doit être différent de l'ancien", null);
         }
         user.setPassword(bCryptPasswordEncoder.encode(changePasswordRequest.getNewPassword()));
+        user.setMustChangePassword(false);
         userRepository.save(user);
         return new ApiResponse(200, "Mot de passe changé avec succès", null);
     }
@@ -341,6 +345,13 @@ public class UserController {
         }catch (Exception e){
             throw new Exception("An error ocuured while deleting the user "+e);
         }
+    }
+
+    @PatchMapping("/{id}/enabled")
+    public ApiResponse<User> toggleEnabled(@PathVariable Long id) {
+        User user = userService.toggleEnabled(id);
+        String statut = Boolean.TRUE.equals(user.getEnabled()) ? "activé" : "désactivé";
+        return new ApiResponse<>(HttpStatus.OK.value(), "Utilisateur " + statut + " avec succès", user);
     }
 
     @PutMapping("/updateConsultant/{id}")

@@ -59,6 +59,9 @@ public class User {
     private List<Project> projects = new ArrayList<>();
 
 
+    @Column(columnDefinition = "boolean default false")
+    private Boolean mustChangePassword;
+
     // Relation ManyToOne avec PartieInteresse
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)

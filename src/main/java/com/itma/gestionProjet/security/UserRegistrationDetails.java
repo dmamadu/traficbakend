@@ -13,16 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * @author Sampson Alfred
- */
-import org.springframework.security.core.GrantedAuthority;
-        import org.springframework.security.core.authority.SimpleGrantedAuthority;
-        import org.springframework.security.core.userdetails.UserDetails;
+import com.itma.gestionProjet.entities.Project;
 
-        import java.util.Collection;
-        import java.util.List;
-        import java.util.stream.Collectors;
 @Data
 public class UserRegistrationDetails implements UserDetails {
 
@@ -30,15 +22,24 @@ public class UserRegistrationDetails implements UserDetails {
     private String password;
     private boolean isEnabled;
     private List<GrantedAuthority> authorities;
-    private User user; // Ajout d'une référence à l'objet User
+    private User user;
+    private List<Long> projectIds;
+    private List<String> roleNames;
+
     public UserRegistrationDetails(User user) {
         this.userName = user.getEmail();
         this.user = user;
         this.password = user.getPassword();
         this.isEnabled = user.getEnabled();
-        // Convertir les rôles de l'utilisateur en GrantedAuthority
         this.authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+        // Chargé pendant la transaction active de loadUserByUsername
+        this.projectIds = user.getProjects().stream()
+                .map(Project::getId)
+                .collect(Collectors.toList());
+        this.roleNames = user.getRoles().stream()
+                .map(Role::getName)
                 .collect(Collectors.toList());
     }
 
