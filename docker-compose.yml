@@ -48,6 +48,7 @@ services:
       AWS_SECRET_KEY: ${AWS_SECRET_KEY:-placeholder}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_BUCKET: ${AWS_BUCKET:-placeholder}
+      JWT_SECRET: ${JWT_SECRET}
       APP_SUPPORT_MAIL: ${APP_SUPPORT_MAIL}
       APP_FRONT_URL: ${APP_FRONT_URL}
     depends_on:
