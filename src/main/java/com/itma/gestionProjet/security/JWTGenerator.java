@@ -1,7 +1,6 @@
 package com.itma.gestionProjet.security;
 
 
-import java.security.KeyPair;
 import java.util.Date;
 
 import com.itma.gestionProjet.entities.Project;
@@ -9,26 +8,25 @@ import com.itma.gestionProjet.entities.Role;
 import com.itma.gestionProjet.entities.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
 import java.util.List;
 import java.util.stream.Collectors;
-//import java.security.KeyPair;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
-
 
 import javax.crypto.SecretKey;
 
 
 @Component
 public class JWTGenerator {
-    // Clé secrète pour signer le token (HS512)
-    private static final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final SecretKey key;
+
+    public JWTGenerator(@Value("${app.jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
     // Génération du token JWT
     public String generateToken(Authentication authentication) {
         // Récupération de l'utilisateur authentifié
@@ -80,7 +78,7 @@ public class JWTGenerator {
                     .parseClaimsJws(token);
             return true;
         } catch (Exception ex) {
-            throw new AuthenticationCredentialsNotFoundException("JWT expiré ou incorrect", ex.fillInStackTrace());
+            return false;
         }
     }
 }
