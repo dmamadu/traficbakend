@@ -18,11 +18,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.itma.gestionProjet.services.IUserService;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,15 @@ public class UserService  implements IUserService {
 
     @Autowired
     private  VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
+
+    private String currentUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : "SYSTEM";
+    }
+
     @Override
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -128,6 +139,13 @@ public class UserService  implements IUserService {
 
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
+
+        auditRepository.save(new AuditEntry(
+                "CREATION_UTILISATEUR",
+                String.format("Création de l'utilisateur %s (rôle: %s)", savedUser.getEmail(), role.getName()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
 
         // Envoi de l'email avec le mot de passe
         try {
@@ -198,6 +216,13 @@ public class UserService  implements IUserService {
 
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
+
+        auditRepository.save(new AuditEntry(
+                "CREATION_UTILISATEUR",
+                String.format("Création du maître d'ouvrage %s", savedUser.getEmail()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
 
         // Envoi de l'email avec le mot de passe
         try {
@@ -280,6 +305,13 @@ public class UserService  implements IUserService {
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
 
+        auditRepository.save(new AuditEntry(
+                "CREATION_UTILISATEUR",
+                String.format("Création du consultant %s", savedUser.getEmail()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
+
         // Envoi de l'email avec le mot de passe
         try {
             /*
@@ -352,7 +384,14 @@ public class UserService  implements IUserService {
         //existingUser.setEnabled(false);
        // existingUser.setPassword(bCryptPasswordEncoder.encode("Passer@123"));
         existingUser.setImageUrl(p.getImageUrl());
-        return  userRepository.save(existingUser);
+        User savedUser = userRepository.save(existingUser);
+        auditRepository.save(new AuditEntry(
+                "MODIFICATION_UTILISATEUR",
+                String.format("Modification du maître d'ouvrage %s (id: %d)", savedUser.getEmail(), savedUser.getId()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
+        return savedUser;
 
     }
 
@@ -401,6 +440,13 @@ public class UserService  implements IUserService {
         userRepository.save(user);
 
  */
+
+        auditRepository.save(new AuditEntry(
+                "SUPPRESSION_UTILISATEUR",
+                String.format("Suppression de l'utilisateur %s (id: %d)", user.getEmail(), id),
+                currentUser(),
+                LocalDateTime.now()
+        ));
 
         // Delete the user
         userRepository.deleteById((id));
@@ -504,6 +550,12 @@ public class UserService  implements IUserService {
     public void changePassword(User theUser, String newPassword) {
         theUser.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(theUser);
+        auditRepository.save(new AuditEntry(
+                "REINITIALISATION_MOT_DE_PASSE",
+                "Réinitialisation du mot de passe via lien de récupération",
+                theUser.getEmail(),
+                LocalDateTime.now()
+        ));
     }
 
     @Override
@@ -516,7 +568,15 @@ public class UserService  implements IUserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé avec l'id " + id));
         user.setEnabled(!Boolean.TRUE.equals(user.getEnabled()));
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        auditRepository.save(new AuditEntry(
+                Boolean.TRUE.equals(savedUser.getEnabled()) ? "ACTIVATION_UTILISATEUR" : "DESACTIVATION_UTILISATEUR",
+                String.format("Utilisateur %s %s", savedUser.getEmail(),
+                        Boolean.TRUE.equals(savedUser.getEnabled()) ? "activé" : "désactivé"),
+                currentUser(),
+                LocalDateTime.now()
+        ));
+        return savedUser;
     }
 
 
@@ -556,7 +616,14 @@ public class UserService  implements IUserService {
         existingUser.setImageUrl(p.getImageUrl());
 
         // Save the updated user
-        return userRepository.save(existingUser);
+        User savedUser = userRepository.save(existingUser);
+        auditRepository.save(new AuditEntry(
+                "MODIFICATION_UTILISATEUR",
+                String.format("Modification du consultant %s (id: %d)", savedUser.getEmail(), savedUser.getId()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
+        return savedUser;
     }
 
 
@@ -644,7 +711,15 @@ public class UserService  implements IUserService {
         user.setCategorie(categorie);
 
         // Save the updated user
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        auditRepository.save(new AuditEntry(
+                "MODIFICATION_UTILISATEUR",
+                String.format("Modification de l'utilisateur %s (id: %d, rôle: %s)",
+                        savedUser.getEmail(), savedUser.getId(), role.getName()),
+                currentUser(),
+                LocalDateTime.now()
+        ));
+        return savedUser;
     }
 
     public Page<User> getUsersByRoleNameAndProjectId(

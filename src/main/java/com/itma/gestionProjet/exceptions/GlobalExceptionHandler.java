@@ -11,6 +11,7 @@ import com.itma.gestionProjet.dtos.ExceptionResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -216,6 +217,16 @@ public class GlobalExceptionHandler {
         response.setData(List.of(ex.getMessage()));
         response.setMessage("An unexpected error occurred.");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Gestion des accès refusés par @PreAuthorize
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<AApiResponse<String>> handleAccessDeniedException(AccessDeniedException ex) {
+        AApiResponse<String> response = new AApiResponse<>();
+        response.setResponseCode(HttpStatus.FORBIDDEN.value());
+        response.setData(List.of(ex.getMessage()));
+        response.setMessage("Vous n'avez pas les droits requis pour effectuer cette action.");
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     // Gestion des exceptions EntityNotFoundException

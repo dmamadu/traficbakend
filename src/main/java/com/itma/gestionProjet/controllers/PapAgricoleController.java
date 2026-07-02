@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -287,6 +288,7 @@ public class PapAgricoleController {
 
     // Supprimer par une liste d'IDs
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ResponseEntity<AApiResponse<String>> deleteAllByIds(@RequestBody List<Long> ids) {
         try {
             if (ids == null || ids.isEmpty()) {

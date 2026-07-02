@@ -305,9 +305,11 @@ package com.itma.gestionProjet.services.imp;
 import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatRequestDTO;
 import com.itma.gestionProjet.dtos.DatabasePapHabitatResponseDTO;
+import com.itma.gestionProjet.entities.AuditEntry;
 import com.itma.gestionProjet.entities.DatabasePapHabitat;
 import com.itma.gestionProjet.entities.Project;
 import com.itma.gestionProjet.helpers.StatsHelper;
+import com.itma.gestionProjet.repositories.AuditRepository;
 import com.itma.gestionProjet.repositories.DatabasePapHabitatRepository;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
@@ -318,9 +320,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -333,6 +337,9 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -789,6 +796,18 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
                             ids.size(), existingCount)
             );
         }
+
+        // Journal d'audit avant suppression
+        List<DatabasePapHabitat> paps = repository.findAllById(ids);
+        String utilisateur = SecurityContextHolder.getContext().getAuthentication().getName();
+        String details = String.format(
+                "Suppression en masse de %d PAP habitat: %s",
+                paps.size(),
+                paps.stream()
+                        .map(p -> p.getCodePap() != null ? p.getCodePap() : "id:" + p.getId())
+                        .collect(Collectors.joining(", "))
+        );
+        auditRepository.save(new AuditEntry("SUPPRESSION_PAP_HABITAT_BATCH", details, utilisateur, LocalDateTime.now()));
 
         // Supprimer - Méthode 1 : JPA native (RECOMMANDÉ)
         repository.deleteAllById(ids);

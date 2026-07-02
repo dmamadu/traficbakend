@@ -19,6 +19,7 @@ public interface PlainteService {
     PlainteDto getPlainteById(Long id);
     PlainteDto updatePlainte(Long id, PlainteRequest plainteRequest);
     void deletePlainte(Long id);
+    void deleteAllByIds(List<Long> ids);
     List<PlainteDto> createPlaintes(List<PlainteRequest> plainteRequests);
     AApiResponse<PlainteDto> getPlainteByCodePap(String codePap, int page, int size);
     AApiResponse<PlainteDto> searchGlobalPlaintes(String searchTerm, Optional<Long> projectId, int page, int size);

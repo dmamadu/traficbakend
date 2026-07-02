@@ -2,9 +2,11 @@ package com.itma.gestionProjet.services.imp;
 import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.DatabasePapPlaceAffaireRequestDTO;
 import com.itma.gestionProjet.dtos.DatabasePapPlaceAffaireResponseDTO;
+import com.itma.gestionProjet.entities.AuditEntry;
 import com.itma.gestionProjet.entities.DatabasePapPlaceAffaire;
 import com.itma.gestionProjet.entities.Project;
 import com.itma.gestionProjet.helpers.StatsHelper;
+import com.itma.gestionProjet.repositories.AuditRepository;
 import com.itma.gestionProjet.repositories.DatabasePapPlaceAffaireRepository;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
@@ -14,9 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +33,9 @@ public class DatabasePapPlaceAffaireServiceImpl implements DatabasePapPlaceAffai
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -578,6 +585,16 @@ public class DatabasePapPlaceAffaireServiceImpl implements DatabasePapPlaceAffai
         if (ids == null || ids.isEmpty()) {
             throw new IllegalArgumentException("IDs list cannot be null or empty");
         }
+        List<DatabasePapPlaceAffaire> paps = repository.findAllById(ids);
+        String utilisateur = SecurityContextHolder.getContext().getAuthentication().getName();
+        String details = String.format(
+                "Suppression en masse de %d PAP place d'affaire(s): %s",
+                paps.size(),
+                paps.stream()
+                        .map(p -> p.getCodePap() != null ? p.getCodePap() : "id:" + p.getId())
+                        .collect(Collectors.joining(", "))
+        );
+        auditRepository.save(new AuditEntry("SUPPRESSION_PAP_PLACEAFFAIRE_BATCH", details, utilisateur, LocalDateTime.now()));
         repository.deleteAllByIdIn(ids);
     }
 

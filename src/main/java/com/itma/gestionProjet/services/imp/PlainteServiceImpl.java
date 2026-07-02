@@ -3,7 +3,9 @@ package com.itma.gestionProjet.services.imp;
 import com.itma.gestionProjet.dtos.AApiResponse;
 import com.itma.gestionProjet.dtos.PlainteDto;
 import com.itma.gestionProjet.dtos.PlainteImportResultDto;
+import com.itma.gestionProjet.entities.AuditEntry;
 import com.itma.gestionProjet.entities.Plainte;
+import com.itma.gestionProjet.repositories.AuditRepository;
 import com.itma.gestionProjet.repositories.PlainteRepository;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.requests.PlainteRequest;
@@ -14,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,6 +35,9 @@ public class PlainteServiceImpl implements PlainteService {
 
     @Autowired
     private ProjectRepository projetRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
 
     @Override
     public PlainteDto createPlainte(PlainteRequest req) {
@@ -75,6 +82,25 @@ public class PlainteServiceImpl implements PlainteService {
     @Override
     public void deletePlainte(Long id) {
         plainteRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("IDs list cannot be null or empty");
+        }
+        List<Plainte> plaintes = plainteRepository.findAllById(ids);
+        String utilisateur = SecurityContextHolder.getContext().getAuthentication().getName();
+        String details = String.format(
+                "Suppression en masse de %d plainte(s): %s",
+                plaintes.size(),
+                plaintes.stream()
+                        .map(p -> p.getNumeroReference() != null ? p.getNumeroReference() : "id:" + p.getId())
+                        .collect(Collectors.joining(", "))
+        );
+        auditRepository.save(new AuditEntry("SUPPRESSION_PLAINTE_BATCH", details, utilisateur, LocalDateTime.now()));
+        plainteRepository.deleteAllByIdIn(ids);
     }
 
     @Override

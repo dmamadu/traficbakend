@@ -5,11 +5,13 @@ import com.itma.gestionProjet.Password.PasswordRequest;
 import com.itma.gestionProjet.Password.PasswordRequestUtil;
 import com.itma.gestionProjet.Password.PasswordResetUtil;
 import com.itma.gestionProjet.dtos.*;
+import com.itma.gestionProjet.entities.AuditEntry;
 import com.itma.gestionProjet.entities.User;
 import com.itma.gestionProjet.entities.VerificationToken;
 import com.itma.gestionProjet.events.RegistrationCompleteEvent;
 import com.itma.gestionProjet.events.listenner.RegistrationCompleteEventListener;
 import com.itma.gestionProjet.exceptions.EmailAlreadyExistsException;
+import com.itma.gestionProjet.repositories.AuditRepository;
 import com.itma.gestionProjet.repositories.UserRepository;
 import com.itma.gestionProjet.repositories.VerificationTokenRepository;
 import com.itma.gestionProjet.requests.ChangePasswordRequest;
@@ -31,7 +33,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,6 +46,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,6 +77,9 @@ public class UserController {
     @Autowired
     private  HttpServletRequest servletRequest;
     private  final  VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private AuditRepository auditRepository;
 
     @Value("${app.front.url}")
     private String urlFront;
@@ -114,6 +122,7 @@ public class UserController {
 
 
     @RequestMapping(path = "/createUser", method = RequestMethod.POST)
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public  ApiResponse<User> createUser(@Valid @RequestBody UserRequest userRequest, final HttpServletRequest request) {
         User user = userService.saveUser(userRequest);
         publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
@@ -121,6 +130,7 @@ public class UserController {
     }
 
     @RequestMapping(path = "/updateUser/{userId}", method = RequestMethod.PUT)
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ApiResponse<User> updateUser(@PathVariable Long userId, @RequestBody UserRequest userRequest, final HttpServletRequest request) {
         try {
             // Call the service layer to update the user
@@ -152,10 +162,21 @@ public class UserController {
     }
     @PostMapping("login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDTO loginDto){
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getEmail(),
-                        loginDto.getPassword()));
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getEmail(),
+                            loginDto.getPassword()));
+        } catch (AuthenticationException e) {
+            auditRepository.save(new AuditEntry(
+                    "CONNEXION_ECHEC",
+                    "Échec de connexion: " + e.getMessage(),
+                    loginDto.getEmail(),
+                    LocalDateTime.now()
+            ));
+            throw e;
+        }
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         if (authentication.isAuthenticated()){
@@ -163,9 +184,21 @@ public class UserController {
             Optional<User> user=userRepository.findByEmail(loginDto.getEmail());
                 User user1 = user.get();
                 UserDTO userDTO = userService.convertEntityToDto(user1);
+                auditRepository.save(new AuditEntry(
+                        "CONNEXION_REUSSIE",
+                        "Connexion réussie",
+                        loginDto.getEmail(),
+                        LocalDateTime.now()
+                ));
                 return new ResponseEntity<>(new AuthResponseDTO(token, Optional.ofNullable(userDTO)), HttpStatus.OK);
         }
         else {
+            auditRepository.save(new AuditEntry(
+                    "CONNEXION_ECHEC",
+                    "Échec de connexion: identifiants invalides",
+                    loginDto.getEmail(),
+                    LocalDateTime.now()
+            ));
             throw  new UsernameNotFoundException("Invalid credentials");
         }
 
@@ -231,6 +264,12 @@ public class UserController {
 
         // Vérifier l'ancien mot de passe
         if (!bCryptPasswordEncoder.matches(changePasswordRequest.getOldPassword(), user.getPassword())) {
+            auditRepository.save(new AuditEntry(
+                    "CHANGEMENT_MOT_DE_PASSE_ECHEC",
+                    "Échec de changement de mot de passe: ancien mot de passe incorrect",
+                    changePasswordRequest.getEmail(),
+                    LocalDateTime.now()
+            ));
             return new ApiResponse(400, "L'ancien mot de passe est incorrect", null);
         }
         // Vérifier que le nouveau mot de passe est différent de l'ancien
@@ -240,6 +279,12 @@ public class UserController {
         user.setPassword(bCryptPasswordEncoder.encode(changePasswordRequest.getNewPassword()));
         user.setMustChangePassword(false);
         userRepository.save(user);
+        auditRepository.save(new AuditEntry(
+                "CHANGEMENT_MOT_DE_PASSE",
+                "Changement de mot de passe par l'utilisateur",
+                changePasswordRequest.getEmail(),
+                LocalDateTime.now()
+        ));
         return new ApiResponse(200, "Mot de passe changé avec succès", null);
     }
 
@@ -277,6 +322,7 @@ public class UserController {
 
 //creation des maitres d'ouvrages
     @RequestMapping(path = "/createMaitreOuvrage", method = RequestMethod.POST)
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public  ApiResponse<User> createMO(@RequestBody MoRequest userRequest, final HttpServletRequest request) {
       //  ProjectDTO projectDTO = projectService.saveProject(projectRequest);
         User user = userService.saveMo(userRequest);
@@ -286,6 +332,7 @@ public class UserController {
     }
 
     @RequestMapping(path = "/createConsultant", method = RequestMethod.POST)
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public  ApiResponse<User> createConsultant(@RequestBody UserRequest userRequest, final HttpServletRequest request) {
         //  ProjectDTO projectDTO = projectService.saveProject(projectRequest);
         User user = userService.saveConsultant(userRequest);
@@ -328,6 +375,7 @@ public class UserController {
 
 
     @DeleteMapping("/deleteMaitreOuvrage/{id}")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ApiResponse<?> deleteUser(@PathVariable Long id) throws Exception {
         try {
             userService.deleteUserById(id);
@@ -338,6 +386,7 @@ public class UserController {
     }
 
     @PutMapping("/updateMaitreOuvrage/{id}")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ApiResponse<User> updateMo(@RequestBody MoRequest moRequest,@PathVariable Long id) throws Exception {
         try{
             User updatedUser = userService.updateMo(moRequest, id);
@@ -348,6 +397,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/enabled")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ApiResponse<User> toggleEnabled(@PathVariable Long id) {
         User user = userService.toggleEnabled(id);
         String statut = Boolean.TRUE.equals(user.getEnabled()) ? "activé" : "désactivé";
@@ -355,6 +405,7 @@ public class UserController {
     }
 
     @PutMapping("/updateConsultant/{id}")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public  ApiResponse<User> updateConsultant(@RequestBody UserRequest userRequest,@PathVariable Long id) {
         try {
             User user = userService.updateConsultant(id, userRequest);

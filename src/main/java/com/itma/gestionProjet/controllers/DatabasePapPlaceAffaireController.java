@@ -8,6 +8,7 @@ import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -198,6 +199,7 @@ public class DatabasePapPlaceAffaireController {
 
     // Supprimer par une liste d'IDs
     @DeleteMapping("/batch")
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     public ResponseEntity<AApiResponse<String>> deleteAllByIds(@RequestBody List<Long> ids) {
         try {
             if (ids == null || ids.isEmpty()) {

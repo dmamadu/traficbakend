@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +24,7 @@ import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class UserRegistrationSecurityConfig {
 
 @Autowired
@@ -31,10 +33,18 @@ public class UserRegistrationSecurityConfig {
     private static final String[] SECURED_URLs = {"/yna/**"};
 
     private static final String[] UN_SECURED_URLs = {
-            "/users/**",
             "/image/**",
             "projects/**",
             "/geolocation/**"
+    };
+
+    // Seuls les échanges d'authentification en dehors de toute session doivent rester publics.
+    // Tout le reste de /users/** (création, modification, suppression, listing...) exige un JWT valide.
+    private static final String[] PUBLIC_USER_URLs = {
+            "/users/login",
+            "/users/reset",
+            "/users/reset-password",
+            "/users/verifyEmail"
     };
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -88,7 +98,8 @@ public class UserRegistrationSecurityConfig {
                     }
                 }))
                 .authorizeHttpRequests()
-                .requestMatchers(UN_SECURED_URLs).permitAll().and()
+                .requestMatchers(UN_SECURED_URLs).permitAll()
+                .requestMatchers(PUBLIC_USER_URLs).permitAll().and()
                 .authorizeHttpRequests().requestMatchers(SECURED_URLs)
                 .hasAuthority("Super Admin").anyRequest()
                 .authenticated()
