@@ -498,6 +498,18 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
     private Double zeroIfNull(Double v) { return v != null ? v : 0.0; }
 
     private String determinerVulnerabilite(DatabasePapHabitat pap) {
+        // 0. Champ déclaré à l'import/saisie (Oui/Non) : prioritaire s'il est renseigné
+        if (pap.getVulne() != null && !pap.getVulne().trim().isEmpty()) {
+            String declare = pap.getVulne().trim().toLowerCase();
+            if (declare.equals("oui")) {
+                return "Vulnérabilité déclarée";
+            }
+            if (declare.equals("non")) {
+                return "Non vulnérable";
+            }
+            // valeur non reconnue (ni "oui" ni "non") → on retombe sur les critères ci-dessous
+        }
+
         List<String> vulnerabilites = new ArrayList<>();
 
         if (pap.getSituationMatrimoniale() != null &&
@@ -506,9 +518,11 @@ public class DatabasePapHabitatServiceImpl implements DatabasePapHabitatService 
             vulnerabilites.add("Situation matrimoniale précaire");
         }
 
-        if (pap.getMembreFoyerHandicape() != null && !pap.getMembreFoyerHandicape().isEmpty() &&
-                !"non".equalsIgnoreCase(pap.getMembreFoyerHandicape())) {
-            vulnerabilites.add("Ménage avec personne handicapée");
+        if (pap.getMembreFoyerHandicape() != null) {
+            String membreFoyerHandicape = pap.getMembreFoyerHandicape().trim().toLowerCase();
+            if (membreFoyerHandicape.contains("oui") || membreFoyerHandicape.contains("handicap")) {
+                vulnerabilites.add("Ménage avec personne handicapée");
+            }
         }
 
         int age = -1;

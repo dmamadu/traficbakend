@@ -207,6 +207,18 @@ public class DatabasePapPlaceAffaireServiceImpl implements DatabasePapPlaceAffai
     }
 
     private String determinerVulnerabilite(DatabasePapPlaceAffaire pap) {
+        // 0. Champ déclaré à l'import/saisie (Oui/Non) : prioritaire s'il est renseigné
+        if (pap.getVulne() != null && !pap.getVulne().trim().isEmpty()) {
+            String declare = pap.getVulne().trim().toLowerCase();
+            if (declare.equals("oui")) {
+                return "Vulnérabilité déclarée";
+            }
+            if (declare.equals("non")) {
+                return "Non vulnérable";
+            }
+            // valeur non reconnue (ni "oui" ni "non") → on retombe sur les critères ci-dessous
+        }
+
         List<String> vulnerabilites = new ArrayList<>();
 
         // 1. Situation matrimoniale précaire
@@ -217,10 +229,11 @@ public class DatabasePapPlaceAffaireServiceImpl implements DatabasePapPlaceAffai
         }
 
         // 2. Ménage avec personne handicapée
-        if (pap.getMembreFoyerHandicape() != null &&
-                !pap.getMembreFoyerHandicape().isEmpty() &&
-                !"non".equalsIgnoreCase(pap.getMembreFoyerHandicape())) {
-            vulnerabilites.add("Ménage avec personne handicapée");
+        if (pap.getMembreFoyerHandicape() != null) {
+            String membreFoyerHandicape = pap.getMembreFoyerHandicape().trim().toLowerCase();
+            if (membreFoyerHandicape.contains("oui") || membreFoyerHandicape.contains("handicap")) {
+                vulnerabilites.add("Ménage avec personne handicapée");
+            }
         }
 
         // 3. Mineur chef de ménage
