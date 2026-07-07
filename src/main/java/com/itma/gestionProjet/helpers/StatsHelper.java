@@ -21,7 +21,8 @@ public class StatsHelper {
             "Mineur chef de ménage",
             "Personne âgée sans soutien",
             "Ménage nombreux",
-            "Analphabétisme"
+            "Analphabétisme",
+            "Vulnérabilité déclarée"
     );
 
     private static final Set<String> MALE_TERMS   = Set.of("m", "masculin", "homme", "male", "h", "mâle");
