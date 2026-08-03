@@ -16,10 +16,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
 
 
+@Slf4j
 @Component
 public class JWTGenerator {
     private final SecretKey key;
@@ -78,6 +80,7 @@ public class JWTGenerator {
                     .parseClaimsJws(token);
             return true;
         } catch (Exception ex) {
+            log.error("Validation JWT échouée : {} - {}", ex.getClass().getSimpleName(), ex.getMessage());
             return false;
         }
     }
