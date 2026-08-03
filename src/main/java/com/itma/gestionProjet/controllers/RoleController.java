@@ -5,6 +5,7 @@ import com.itma.gestionProjet.dtos.RoleDTO;
 import com.itma.gestionProjet.entities.Role;
 import com.itma.gestionProjet.requests.RoleRequest;
 import com.itma.gestionProjet.services.imp.RoleService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/roles")
 public class RoleController {
@@ -60,8 +62,13 @@ public class RoleController {
     @PreAuthorize("@permissionChecker.has('ROLES_GERER_PERMISSIONS')")
     @PutMapping("/{id}/permissions")
     public AApiResponse<RoleDTO> setRolePermissions(@PathVariable Long id, @RequestBody List<String> permissionCodes) {
-        RoleDTO role = roleService.setRolePermissions(id, permissionCodes);
-        return new AApiResponse<>(200, List.of(role), 0, 1, "Permissions du rôle mises à jour", 1);
+        try {
+            RoleDTO role = roleService.setRolePermissions(id, permissionCodes);
+            return new AApiResponse<>(200, List.of(role), 0, 1, "Permissions du rôle mises à jour", 1);
+        } catch (Exception ex) {
+            log.error(">>> ROLE_PERMISSIONS_ERROR roleId={} codes={}", id, permissionCodes, ex);
+            throw ex;
+        }
     }
 
 }
