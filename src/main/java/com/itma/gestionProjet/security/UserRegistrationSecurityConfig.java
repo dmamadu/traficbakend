@@ -35,7 +35,8 @@ public class UserRegistrationSecurityConfig {
     private static final String[] UN_SECURED_URLs = {
             "/image/**",
             "projects/**",
-            "/geolocation/**"
+            "/geolocation/**",
+            "/error"
     };
 
     // Seuls les échanges d'authentification en dehors de toute session doivent rester publics.
