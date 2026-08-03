@@ -17,6 +17,7 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,10 +77,10 @@ public class RoleService implements IRoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RoleNotFoundException("Le rôle avec l'id " + roleId + " n'existe pas."));
         List<Permission> permissions = permissionCodes == null || permissionCodes.isEmpty()
-                ? List.of()
-                : permissionRepository.findAll().stream()
+                ? new ArrayList<>()
+                : new ArrayList<>(permissionRepository.findAll().stream()
                         .filter(p -> permissionCodes.contains(p.getCode()))
-                        .toList();
+                        .toList());
         role.setPermissions(permissions);
         return convertEntityToDto(roleRepository.save(role));
     }
