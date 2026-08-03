@@ -30,4 +30,6 @@ public interface DatabasePapHabitatService {
     boolean existAllByIds(List<Long> ids);
 
     CategoryStats getCategoryStats(Long projectId);
+
+    long recalculerVulnerabilites();
 }

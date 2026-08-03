@@ -44,5 +44,7 @@ public interface DatabasePapAgricoleService {
 
     CategoryStats getCategoryStats(Long projectId); // ← ajouter ça
 
+    long recalculerVulnerabilites();
+
 }
 

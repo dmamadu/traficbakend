@@ -1022,14 +1022,17 @@ public class DatabasePapAgricoleServiceImpl implements DatabasePapAgricoleServic
     }
 
     private String determinerVulnerabilite(DatabasePapAgricole pap) {
-        // 0. Champ déclaré à l'import/saisie (Oui/Non) : prioritaire s'il est renseigné
+        // 0. Champ déclaré à l'import/saisie (Oui/Non) : "Non" est prioritaire et bloque toute détection.
+        // "Oui" ne court-circuite plus les 6 critères détaillés : on les évalue quand même pour
+        // rattacher un motif précis ; "Vulnérabilité déclarée" ne sert que de filet si aucun ne matche.
+        boolean declareOui = false;
         if (pap.getVulne() != null && !pap.getVulne().trim().isEmpty()) {
             String declare = pap.getVulne().trim().toLowerCase();
-            if (declare.equals("oui")) {
-                return "Vulnérabilité déclarée";
-            }
             if (declare.equals("non")) {
                 return "Non vulnérable";
+            }
+            if (declare.equals("oui")) {
+                declareOui = true;
             }
             // valeur non reconnue (ni "oui" ni "non") → on retombe sur les critères ci-dessous
         }
@@ -1095,11 +1098,22 @@ public class DatabasePapAgricoleServiceImpl implements DatabasePapAgricoleServic
             vulnerabilites.add("Analphabétisme");
         }
 
+        if (vulnerabilites.isEmpty() && declareOui) {
+            return "Vulnérabilité déclarée";
+        }
         return vulnerabilites.isEmpty() ? "Non vulnérable" : String.join(", ", vulnerabilites);
     }
 
     private int calculerAge(LocalDate dateNaissance) {
         return Period.between(dateNaissance, LocalDate.now()).getYears();
+    }
+
+    @Override
+    public long recalculerVulnerabilites() {
+        List<DatabasePapAgricole> paps = repository.findAll();
+        paps.forEach(pap -> pap.setVulnerabilite(determinerVulnerabilite(pap)));
+        repository.saveAll(paps);
+        return paps.size();
     }
 
     @Override

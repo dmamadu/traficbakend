@@ -37,7 +37,7 @@ public class StatsHelper {
     ) {
         long total = paps.size();
         long hommes = 0, femmes = 0, autre = 0;
-        long nonVulnerables = 0;
+        long vulnerablesCount = 0;
         long vulnHommes = 0, vulnFemmes = 0, vulnAutre = 0;
 
         Map<String, long[]> criteresCount = new LinkedHashMap<>();
@@ -55,9 +55,8 @@ public class StatsHelper {
             else autre++;
 
             boolean isNonVuln = vuln == null || vuln.trim().equalsIgnoreCase("Non vulnérable");
-            if (isNonVuln) {
-                nonVulnerables++;
-            } else {
+            if (!isNonVuln) {
+                vulnerablesCount++;
                 for (String critere : CRITERES) {
                     if (vuln.contains(critere)) {
                         long[] counts = criteresCount.get(critere);
@@ -72,7 +71,7 @@ public class StatsHelper {
             }
         }
 
-        long totalVulnerables = total - nonVulnerables;
+        long totalVulnerables = vulnerablesCount;
 
         Map<String, CriterionStats> criteresStats = new LinkedHashMap<>();
         criteresCount.forEach((critere, counts) ->

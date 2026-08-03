@@ -14,6 +14,7 @@ import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -60,6 +61,22 @@ public class statController {
         response.setDossiersStats(buildDossiersStats(projectId));
 
         return response;
+    }
+
+    // Recalcule le champ `vulnerabilite` de tous les PAP existants (3 catégories) avec la logique
+    // actuelle de determinerVulnerabilite(). À lancer une fois après un changement de cette logique
+    // pour que les PAP déjà en base reflètent la nouvelle règle.
+    @PostMapping("/recalculer-vulnerabilites")
+    public Map<String, Long> recalculerVulnerabilites() {
+        long paCount = placeAffaireService.recalculerVulnerabilites();
+        long agCount = agricoleService.recalculerVulnerabilites();
+        long habCount = habitatService.recalculerVulnerabilites();
+
+        Map<String, Long> result = new LinkedHashMap<>();
+        result.put("placeAffaire", paCount);
+        result.put("agricole", agCount);
+        result.put("habitat", habCount);
+        return result;
     }
 
     @GetMapping("/avancement")
