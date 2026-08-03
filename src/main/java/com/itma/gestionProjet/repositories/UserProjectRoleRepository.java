@@ -17,4 +17,6 @@ public interface UserProjectRoleRepository extends JpaRepository<UserProjectRole
     Optional<UserProjectRole> findByUserIdAndProjectIdAndRoleId(Long userId, Long projectId, Long roleId);
 
     void deleteByUserIdAndProjectIdAndRoleId(Long userId, Long projectId, Long roleId);
+
+    void deleteByUserIdAndProjectId(Long userId, Long projectId);
 }

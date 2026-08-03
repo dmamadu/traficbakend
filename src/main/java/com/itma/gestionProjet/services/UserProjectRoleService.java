@@ -69,6 +69,11 @@ public class UserProjectRoleService {
         userProjectRoleRepository.deleteById(id);
     }
 
+    /** Retire toute affectation de l'utilisateur pour ce projet (ex. retrait de l'utilisateur du projet). */
+    public void removeAllForUserAndProject(Long userId, Long projectId) {
+        userProjectRoleRepository.deleteByUserIdAndProjectId(userId, projectId);
+    }
+
     private UserProjectRoleDTO toDto(UserProjectRole upr) {
         UserProjectRoleDTO dto = new UserProjectRoleDTO();
         dto.setId(upr.getId());

@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.itma.gestionProjet.services.IUserService;
+import com.itma.gestionProjet.services.UserProjectRoleService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -66,6 +67,9 @@ public class UserService  implements IUserService {
 
     @Autowired
     private AuditRepository auditRepository;
+
+    @Autowired
+    private UserProjectRoleService userProjectRoleService;
 
     private String currentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -139,6 +143,12 @@ public class UserService  implements IUserService {
 
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
+
+        // Affecte le rôle au projet via UserProjectRole : sans cette ligne, resolveGrantedCodes()
+        // ne trouve aucune affectation et l'utilisateur voit une sidebar vide malgré son rôle légal.
+        if (p.projectId() != null) {
+            userProjectRoleService.assign(savedUser.getId(), p.projectId(), role.getId());
+        }
 
         auditRepository.save(new AuditEntry(
                 "CREATION_UTILISATEUR",
@@ -216,6 +226,11 @@ public class UserService  implements IUserService {
 
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
+
+        // Affecte le rôle au projet via UserProjectRole (voir saveUser() ci-dessus pour le pourquoi).
+        if (p.getProjectId() != null) {
+            userProjectRoleService.assign(savedUser.getId(), p.getProjectId(), role.getId());
+        }
 
         auditRepository.save(new AuditEntry(
                 "CREATION_UTILISATEUR",
@@ -304,6 +319,11 @@ public class UserService  implements IUserService {
 
         // Sauvegarde de l'utilisateur
         User savedUser = userRepository.save(newUser);
+
+        // Affecte le rôle au projet via UserProjectRole (voir saveUser() ci-dessus pour le pourquoi).
+        if (p.getProjectId() != null) {
+            userProjectRoleService.assign(savedUser.getId(), p.getProjectId(), role.getId());
+        }
 
         auditRepository.save(new AuditEntry(
                 "CREATION_UTILISATEUR",
@@ -710,6 +730,14 @@ public class UserService  implements IUserService {
 
         // Save the updated user
         User savedUser = userRepository.save(user);
+
+        // Synchronise le nouveau rôle vers UserProjectRole pour chaque projet de l'utilisateur :
+        // resolveGrantedCodes() lit UserProjectRole (pas User.roles), donc sans cette synchro le
+        // menu/les guards resteraient sur l'ancien rôle après un changement ici.
+        for (Project project : savedUser.getProjects()) {
+            userProjectRoleService.assign(savedUser.getId(), project.getId(), role.getId());
+        }
+
         auditRepository.save(new AuditEntry(
                 "MODIFICATION_UTILISATEUR",
                 String.format("Modification de l'utilisateur %s (id: %d, rôle: %s)",

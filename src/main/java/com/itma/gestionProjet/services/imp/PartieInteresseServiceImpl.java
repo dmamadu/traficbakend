@@ -9,6 +9,7 @@ import com.itma.gestionProjet.entities.*;
 import com.itma.gestionProjet.exceptions.*;
 import com.itma.gestionProjet.repositories.*;
 import com.itma.gestionProjet.services.PartieInteresseService;
+import com.itma.gestionProjet.services.UserProjectRoleService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,9 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private UserProjectRoleService userProjectRoleService;
 
     @Override
     public List<PartieInteresse> findAll() {
@@ -92,7 +96,18 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
             List<User> users = createContacts(partieInteresse.getContacts(), pip);
             pip.setContacts(users);
 
-            return repository.save(pip);
+            PartieInteresse savedPip = repository.save(pip);
+
+            // Affecte le rôle "Representant principal" au projet via UserProjectRole pour chaque
+            // contact : sans cette ligne, resolveGrantedCodes() ne trouve aucune affectation et le
+            // contact voit une sidebar vide malgré son rôle légal (le save de pip vient de générer
+            // l'id des contacts par cascade, users et savedPip.getContacts() sont les mêmes instances).
+            Role contactRole = roleRepository.findRoleByName("Representant principal");
+            for (User contact : users) {
+                userProjectRoleService.assign(contact.getId(), defaultProject.getId(), contactRole.getId());
+            }
+
+            return savedPip;
 
         } catch (PartieInteresseAlreadyExistsException | EntityNotFoundException e) {
             // On log les erreurs métier connues
@@ -252,6 +267,9 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
                     roles.add(role);
                     user.setRoles(roles);
                     userRepository.save(user);
+                    if (pip.getProject() != null) {
+                        userProjectRoleService.assign(user.getId(), pip.getProject().getId(), role.getId());
+                    }
                 } else {
                     // Si le contact n'existe pas, créer un nouveau contact
                     user = new User();
@@ -267,6 +285,9 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
                     roles.add(role);
                     user.setRoles(roles);
                     userRepository.save(user);
+                    if (pip.getProject() != null) {
+                        userProjectRoleService.assign(user.getId(), pip.getProject().getId(), role.getId());
+                    }
                 }
                 contacts.add(user);
             }
