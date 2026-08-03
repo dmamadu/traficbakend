@@ -33,4 +33,7 @@ build/
 .vscode/
 application.properties
 application.dev.properties
-.envsrc/main/resources/application.properties
+.env
+src/main/resources/application.properties
+docker-compose.yml
+Dockerfile

@@ -22,4 +22,6 @@ public interface IRoleService {
 
     RoleDTO convertEntityToDto(Role p);
     Role convertDtoToEntity(RoleRequest UserDto);
+
+    RoleDTO setRolePermissions(Long roleId, List<String> permissionCodes);
 }

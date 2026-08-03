@@ -6,6 +6,7 @@ import com.itma.gestionProjet.entities.Role;
 import com.itma.gestionProjet.requests.RoleRequest;
 import com.itma.gestionProjet.services.imp.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,22 @@ public class RoleController {
         return new AApiResponse<>(200, null, 0, 1, "Role deleted successfully", 1);
     }
 
+    @GetMapping("/{id}")
+    public AApiResponse<RoleDTO> getRole(@PathVariable Long id) {
+        RoleDTO role = roleService.getRole(id);
+        return new AApiResponse<>(200, List.of(role), 0, 1, "Role retrieved successfully", 1);
+    }
 
+    /**
+     * Remplace intégralement le jeu de permissions d'un rôle (matrice d'administration).
+     * Réservé à ceux qui détiennent la méta-permission ROLES_GERER_PERMISSIONS — évite
+     * qu'un rôle puisse librement s'auto-accorder des droits supplémentaires.
+     */
+    @PreAuthorize("@permissionChecker.has('ROLES_GERER_PERMISSIONS')")
+    @PutMapping("/{id}/permissions")
+    public AApiResponse<RoleDTO> setRolePermissions(@PathVariable Long id, @RequestBody List<String> permissionCodes) {
+        RoleDTO role = roleService.setRolePermissions(id, permissionCodes);
+        return new AApiResponse<>(200, List.of(role), 0, 1, "Permissions du rôle mises à jour", 1);
+    }
 
 }
