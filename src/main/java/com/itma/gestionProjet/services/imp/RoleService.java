@@ -2,10 +2,12 @@ package com.itma.gestionProjet.services.imp;
 
 import com.itma.gestionProjet.dtos.RoleDTO;
 import com.itma.gestionProjet.dtos.UserDTO;
+import com.itma.gestionProjet.entities.Permission;
 import com.itma.gestionProjet.entities.Role;
 import com.itma.gestionProjet.entities.User;
 import com.itma.gestionProjet.exceptions.RoleAlreadyExistsException;
 import com.itma.gestionProjet.exceptions.RoleNotFoundException;
+import com.itma.gestionProjet.repositories.PermissionRepository;
 import com.itma.gestionProjet.repositories.RoleRepository;
 import com.itma.gestionProjet.repositories.VerificationTokenRepository;
 import com.itma.gestionProjet.requests.RoleRequest;
@@ -23,6 +25,9 @@ public class RoleService implements IRoleService {
 
 
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
 
     @Autowired
     ModelMapper modelMapper;
@@ -61,7 +66,22 @@ public class RoleService implements IRoleService {
 
     @Override
     public RoleDTO getRole(Long id) {
-        return null;
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new RoleNotFoundException("Le rôle avec l'id " + id + " n'existe pas."));
+        return convertEntityToDto(role);
+    }
+
+    @Override
+    public RoleDTO setRolePermissions(Long roleId, List<String> permissionCodes) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RoleNotFoundException("Le rôle avec l'id " + roleId + " n'existe pas."));
+        List<Permission> permissions = permissionCodes == null || permissionCodes.isEmpty()
+                ? List.of()
+                : permissionRepository.findAll().stream()
+                        .filter(p -> permissionCodes.contains(p.getCode()))
+                        .toList();
+        role.setPermissions(permissions);
+        return convertEntityToDto(roleRepository.save(role));
     }
 
     @Override
@@ -86,8 +106,15 @@ public class RoleService implements IRoleService {
 
     @Override
     public RoleDTO convertEntityToDto(Role p) {
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
-        return modelMapper.map(p, RoleDTO.class);
+        // Construction manuelle : ModelMapper (LOOSE) confondrait `permissions` (List<Permission>)
+        // et `permissionCodes` (List<String>) et échouerait à les convertir automatiquement.
+        RoleDTO dto = new RoleDTO();
+        dto.setId(p.getId());
+        dto.setName(p.getName());
+        dto.setPermissionCodes(p.getPermissions() == null
+                ? List.of()
+                : p.getPermissions().stream().map(Permission::getCode).toList());
+        return dto;
     }
 
     @Override
