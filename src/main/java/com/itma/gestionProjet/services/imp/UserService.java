@@ -331,8 +331,6 @@ public class UserService  implements IUserService {
             MailRequestDto mailRequest = getMailRequestDto(savedUser);
 
             emailService.sendMail(mailRequest);
-
-            emailService.sendMail(mailRequest);
         } catch (Exception e) {
             log.error("Erreur lors de l'envoi de l'email de création de compte", e);
             // Vous pouvez choisir de ne pas lever d'exception ici pour ne pas interrompre le processus
