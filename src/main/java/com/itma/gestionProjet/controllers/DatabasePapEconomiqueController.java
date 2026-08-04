@@ -9,6 +9,7 @@ import com.itma.gestionProjet.services.DatabasePapEconomiqueService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,8 +23,9 @@ public class DatabasePapEconomiqueController {
     public DatabasePapEconomiqueController(DatabasePapEconomiqueService service) {
         this.service = service;
     }
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> createPapEconomiques(@RequestBody List<DatabasePapEconomiqueRequest> requests) {
+    public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> createPapEconomiques(@RequestBody List<DatabasePapEconomiqueRequest> requests, @RequestParam Long projectId) {
         try {
             List<DatabasePapEconomiqueDto> dtos = service.createPapEconomiques(requests);
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -48,12 +50,16 @@ public class DatabasePapEconomiqueController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> getAllPapEconomiques(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "100000000") int max) {
+            @RequestParam(defaultValue = "100000000") int max,
+            @RequestParam(required = false) Long projectId) {
         try {
-            Page<DatabasePapEconomiqueDto> page = service.getAllPapEconomiques(offset, max);
+            Page<DatabasePapEconomiqueDto> page = projectId != null
+                    ? service.getPapEconomiquesByProjectId(projectId, offset, max)
+                    : service.getAllPapEconomiques(offset, max);
             return ResponseEntity.ok(new AApiResponse<>(
                     HttpStatus.OK.value(),
                     page.getContent(),
@@ -75,8 +81,9 @@ public class DatabasePapEconomiqueController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> getPapEconomiqueById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> getPapEconomiqueById(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             DatabasePapEconomiqueDto dto = service.getPapEconomiqueById(id);
             return ResponseEntity.ok(new AApiResponse<>(
@@ -100,6 +107,7 @@ public class DatabasePapEconomiqueController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<DatabasePapEconomiqueDto>> updatePapEconomique(
             @PathVariable Long id, @RequestBody DatabasePapEconomiqueRequest request) {
@@ -126,8 +134,9 @@ public class DatabasePapEconomiqueController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deletePapEconomique(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deletePapEconomique(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             service.deletePapEconomique(id);
             return ResponseEntity.ok(new AApiResponse<>(
@@ -151,8 +160,9 @@ public class DatabasePapEconomiqueController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/byCodePap/{codePap}")
-    public ResponseEntity<AApiResponse<DatabasePapEconomique>> getByCodePap(@PathVariable String codePap) {
+    public ResponseEntity<AApiResponse<DatabasePapEconomique>> getByCodePap(@PathVariable String codePap, @RequestParam Long projectId) {
         DatabasePapEconomique papEconomique = service.getByCodePap(codePap);
         AApiResponse<DatabasePapEconomique> response = new AApiResponse<>(
                 200, // responseCode

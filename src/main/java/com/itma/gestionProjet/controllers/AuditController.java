@@ -19,7 +19,7 @@ public class AuditController {
     private AuditService auditService;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('AUDIT_VOIR')")
     public ResponseEntity<AApiResponse<AuditEntry>> search(
             @RequestParam(required = false) String typeAction,
             @RequestParam(required = false) String utilisateur,

@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -103,6 +104,7 @@ public class PartieInteresseController {
 //    }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PIP_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> getAll(
             @RequestParam(defaultValue = "0") int offset,
@@ -152,11 +154,13 @@ public class PartieInteresseController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PIP_VOIR')")
     @GetMapping("/{id}")
-    public Optional<PartieInteresse> getById(@PathVariable Long id) {
+    public Optional<PartieInteresse> getById(@PathVariable Long id, @RequestParam Long projectId) {
         return service.findById(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#partieInteresseDTO.getProject_id(), 'PIP_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> create(@RequestBody PartieInteresseResponseDTO partieInteresseDTO) {
         AApiResponse<PartieInteresseResponseDTO> response = new AApiResponse<>();
@@ -176,6 +180,7 @@ public class PartieInteresseController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#partieInteresse.getProject_id(), 'PIP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<PartieInteresseResponseDTO>> update(
             @PathVariable Long id,
@@ -207,8 +212,9 @@ public class PartieInteresseController {
     }
      */
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PIP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> delete(@PathVariable Long id, @RequestParam Long projectId) {
         AApiResponse<Void> response = new AApiResponse<>();
         try {
             service.deleteById(id);

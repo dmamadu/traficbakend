@@ -10,10 +10,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Pas de notion de projet sur CategorieDocument (référentiel partagé, comme CategoriePartieInteresse
+// pour PIP) : vérifié sur le projet actif, comme le reste du module DOCUMENTS.
 @RestController
 @RequestMapping("/categorieDocuments")
 public class CategorieDocumentController {
@@ -21,8 +24,9 @@ public class CategorieDocumentController {
     @Autowired
     private CategorieDocumentService categorieDocumentService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'CATEGORIES_DOCUMENTS_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<CategorieDocumentDTO>> createCategorieDocument(@RequestBody CategorieDocumentRequest categorieDocumentRequest) {
+    public ResponseEntity<AApiResponse<CategorieDocumentDTO>> createCategorieDocument(@RequestBody CategorieDocumentRequest categorieDocumentRequest, @RequestParam Long projectId) {
         AApiResponse<CategorieDocumentDTO> response = new AApiResponse<>();
         try {
             CategorieDocumentDTO categorieDocumentDTO = categorieDocumentService.createCategorieDocument(categorieDocumentRequest);
@@ -38,10 +42,12 @@ public class CategorieDocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'CATEGORIES_DOCUMENTS_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<CategorieDocumentDTO>> updateCategorieDocument(
             @PathVariable Long id,
-            @RequestBody CategorieDocumentRequest categorieDocumentRequest) {
+            @RequestBody CategorieDocumentRequest categorieDocumentRequest,
+            @RequestParam Long projectId) {
         AApiResponse<CategorieDocumentDTO> response = new AApiResponse<>();
         try {
             CategorieDocumentDTO categorieDocumentDTO = categorieDocumentService.updateCategorieDocument(id, categorieDocumentRequest);
@@ -61,8 +67,9 @@ public class CategorieDocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'CATEGORIES_DOCUMENTS_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteCategorieDocument(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteCategorieDocument(@PathVariable Long id, @RequestParam Long projectId) {
         AApiResponse<Void> response = new AApiResponse<>();
         try {
             categorieDocumentService.deleteCategorieDocument(id);
@@ -80,8 +87,9 @@ public class CategorieDocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'CATEGORIES_DOCUMENTS_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<CategorieDocumentDTO>> getCategorieDocumentById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<CategorieDocumentDTO>> getCategorieDocumentById(@PathVariable Long id, @RequestParam Long projectId) {
         AApiResponse<CategorieDocumentDTO> response = new AApiResponse<>();
         try {
             CategorieDocumentDTO categorieDocumentDTO = categorieDocumentService.getCategorieDocumentById(id);
@@ -101,10 +109,12 @@ public class CategorieDocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'CATEGORIES_DOCUMENTS_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<CategorieDocumentDTO>> getAllCategorieDocuments(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam Long projectId) {
         AApiResponse<CategorieDocumentDTO> response = new AApiResponse<>();
         try {
             Pageable pageable = PageRequest.of(page, size);

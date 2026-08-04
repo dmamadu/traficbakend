@@ -9,6 +9,7 @@ import com.itma.gestionProjet.services.CultureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,14 +25,17 @@ public class CultureController {
     @Autowired
     private CultureService cultureService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping()
     public AApiResponse<Culture> getAllCultures(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "100") int max) {
+            @RequestParam(defaultValue = "100") int max,
+            @RequestParam(required = false) Long projectId) {
         return cultureService.getAllCultures(offset, max);
     }
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping()
-    public ResponseEntity<AApiResponse<List<CultureDTO>>> createCulture(@Valid @RequestBody List<CultureRequest> cultureRequests) {
+    public ResponseEntity<AApiResponse<List<CultureDTO>>> createCulture(@Valid @RequestBody List<CultureRequest> cultureRequests, @RequestParam Long projectId) {
         AApiResponse<List<CultureDTO>> response = new AApiResponse<>();
         try {
             List<CultureDTO> cultureDTOs = cultureService.createCulture(cultureRequests);
@@ -53,10 +57,12 @@ public class CultureController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<List<Culture>>> getCulturesByCodePap(@RequestParam String codePap,
                                                                             @RequestParam(defaultValue = "0") int offset,
-                                                                            @RequestParam(defaultValue = "10") int max) {
+                                                                            @RequestParam(defaultValue = "10") int max,
+                                                                            @RequestParam Long projectId) {
         AApiResponse<List<Culture>> response = cultureService.getCulturesByCodePap(codePap, offset, max);
 
         if (response.getData() == null) {

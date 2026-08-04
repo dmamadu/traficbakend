@@ -8,6 +8,7 @@ import com.itma.gestionProjet.services.BatimentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -20,14 +21,17 @@ public class BatimentController {
     @Autowired
     private BatimentService batimentService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<Batiment> getAllBatiments(@RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                  @RequestParam(value = "max", defaultValue = "10000") int max) {
+                                                  @RequestParam(value = "max", defaultValue = "10000") int max,
+                                                  @RequestParam(required = false) Long projectId) {
         return batimentService.getAllBatiments(offset, max);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<List<Batiment>>> createBatiments(@RequestBody List<RequestBatiment> requests) {
+    public ResponseEntity<AApiResponse<List<Batiment>>> createBatiments(@RequestBody List<RequestBatiment> requests, @RequestParam Long projectId) {
         AApiResponse<List<Batiment>> response = new AApiResponse<>();
         try {
             Batiment batimentDtos =  batimentService.createBatiment(requests);
@@ -49,25 +53,30 @@ public class BatimentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public AApiResponse<Batiment> getBatimentById(@PathVariable Long id) {
+    public AApiResponse<Batiment> getBatimentById(@PathVariable Long id, @RequestParam Long projectId) {
         return batimentService.getBatimentById(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
-    public AApiResponse<Batiment> updateBatiment(@PathVariable Long id, @RequestBody Batiment batiment) {
+    public AApiResponse<Batiment> updateBatiment(@PathVariable Long id, @RequestBody Batiment batiment, @RequestParam Long projectId) {
         return batimentService.updateBatiment(id, batiment);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<Void> deleteBatiment(@PathVariable Long id) {
+    public AApiResponse<Void> deleteBatiment(@PathVariable Long id, @RequestParam Long projectId) {
         return batimentService.deleteBatiment(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<List<Batiment>>> getBatimentsByCodePap(@RequestParam String codePap,
                                                                               @RequestParam(defaultValue = "0") int offset,
-                                                                              @RequestParam(defaultValue = "100") int max) {
+                                                                              @RequestParam(defaultValue = "100") int max,
+                                                                              @RequestParam Long projectId) {
         AApiResponse<List<Batiment>> response = batimentService.getBatimentsByCodePap(codePap, offset, max);
 
         if (response.getData() == null) {

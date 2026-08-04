@@ -31,8 +31,9 @@ public class PapAgricoleController {
     @Autowired
     private DatabasePapAgricoleService databasePapAgricoleService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_IMPORTER')")
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file, @RequestParam Long projectId) {
         try {
             ByteArrayInputStream errorFile = excelImportService.importExcel(file);
 
@@ -78,6 +79,7 @@ public class PapAgricoleController {
 
      */
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<DatabasePapAgricoleResponseDTO> getAll(
             @RequestParam(required = false) Long projectId,
@@ -109,6 +111,7 @@ public class PapAgricoleController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/vulnerability-stats")
     public ResponseEntity<Map<String, Object>> getVulnerabilityStats(
             @RequestParam(required = false) Long projectId) {
@@ -119,8 +122,9 @@ public class PapAgricoleController {
 
 
     // Méthode GET pour récupérer une entité par ID
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public AApiResponse<DatabasePapAgricoleResponseDTO> getById(@PathVariable Long id) {
+    public AApiResponse<DatabasePapAgricoleResponseDTO> getById(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             // Appel au service pour récupérer les données par ID
             DatabasePapAgricole data = databasePapAgricoleService.getDatabasePapAgricoleById(id);
@@ -143,8 +147,9 @@ public class PapAgricoleController {
     }
 
     // Méthode POST pour créer de nouvelles entités
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<String>> create(@RequestBody List<DatabasePapAgricoleRequestDTO> requestDTOs) {
+    public ResponseEntity<AApiResponse<String>> create(@RequestBody List<DatabasePapAgricoleRequestDTO> requestDTOs, @RequestParam Long projectId) {
         try {
             databasePapAgricoleService.createDatabasePapAgricole(requestDTOs);
             AApiResponse<String> response = new AApiResponse<>();
@@ -162,6 +167,7 @@ public class PapAgricoleController {
 
 
     // Méthode PUT pour mettre à jour une entité
+    @PreAuthorize("@permissionChecker.has(#requestDTO.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<String>> update(@PathVariable Long id, @RequestBody DatabasePapAgricoleRequestDTO requestDTO) {
         try {
@@ -186,8 +192,9 @@ public class PapAgricoleController {
 
 
     // Méthode DELETE pour supprimer une entité
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<String> delete(@PathVariable Long id) {
+    public AApiResponse<String> delete(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             databasePapAgricoleService.deleteDatabasePapAgricole(id);
 
@@ -207,8 +214,9 @@ public class PapAgricoleController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/byCodePap/{codePap}")
-    public ResponseEntity<AApiResponse<DatabasePapAgricole>> getByCodePap(@PathVariable String codePap) {
+    public ResponseEntity<AApiResponse<DatabasePapAgricole>> getByCodePap(@PathVariable String codePap, @RequestParam Long projectId) {
         DatabasePapAgricole papAgricole = databasePapAgricoleService.getByCodePap(codePap);
         AApiResponse<DatabasePapAgricole> response = new AApiResponse<>(
                 200,
@@ -222,6 +230,7 @@ public class PapAgricoleController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/search")
     public AApiResponse<DatabasePapAgricoleResponseDTO> searchGlobal(
             @RequestParam String searchTerm,
@@ -251,6 +260,7 @@ public class PapAgricoleController {
 
 
     // Vider tous les PAPs agricoles d'un projet
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/project/{projectId}")
     public ResponseEntity<AApiResponse<String>> deleteAllByProjectId(@PathVariable Long projectId) {
         try {

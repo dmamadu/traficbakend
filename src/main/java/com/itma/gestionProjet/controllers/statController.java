@@ -13,6 +13,7 @@ import com.itma.gestionProjet.services.DatabasePapAgricoleService;
 import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +44,9 @@ public class statController {
     @Autowired
     private EntenteRepository ententeRepository;
 
+    // Alimente à la fois /dashboards/jobs (DASHBOARD_BASELINE) et /dashboards/miseEnOeuvre
+    // (DASHBOARD_MISE_EN_OEUVRE) — accessible dès qu'on a le droit de voir l'un des deux.
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DASHBOARD_BASELINE_VOIR') or @permissionChecker.has(#projectId, 'DASHBOARD_MISE_EN_OEUVRE_VOIR')")
     @GetMapping("/combine")
     public CombinedStatsResponse getCombinedStats(@RequestParam(required = false) Long projectId) {
 
@@ -66,6 +70,9 @@ public class statController {
     // Recalcule le champ `vulnerabilite` de tous les PAP existants (3 catégories) avec la logique
     // actuelle de determinerVulnerabilite(). À lancer une fois après un changement de cette logique
     // pour que les PAP déjà en base reflètent la nouvelle règle.
+    // Opération de maintenance globale (toutes catégories, tous projets confondus) : aucun code de
+    // permission du catalogue ne correspond à ce périmètre, réservée à Super Admin/Admin.
+    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
     @PostMapping("/recalculer-vulnerabilites")
     public Map<String, Long> recalculerVulnerabilites() {
         long paCount = placeAffaireService.recalculerVulnerabilites();
@@ -79,6 +86,7 @@ public class statController {
         return result;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DASHBOARD_MISE_EN_OEUVRE_VOIR')")
     @GetMapping("/avancement")
     public AvancementStats getAvancement(@RequestParam(required = false) Long projectId) {
         AvancementStats stats = new AvancementStats();

@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -26,6 +27,7 @@ public class GeolocationController {
 
     // ─── QUARTIERS ────────────────────────────────────────────────────────────
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_VOIR')")
     @GetMapping("/quartiers")
     public ResponseEntity<AApiResponse<QuartierDto>> getAllQuartiers(
             @RequestParam(defaultValue = "0") int offset,
@@ -42,6 +44,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_VOIR')")
     @GetMapping("/quartiers/all")
     public ResponseEntity<AApiResponse<QuartierDto>> getAllQuartiersActifs() {
         List<QuartierDto> quartiers = geolocationService.getAllQuartiersActifs();
@@ -53,6 +56,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_VOIR')")
     @GetMapping("/quartiers/{id}")
     public ResponseEntity<AApiResponse<QuartierDto>> getQuartierById(@PathVariable Long id) {
         QuartierDto quartier = geolocationService.getQuartierById(id);
@@ -64,6 +68,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_CREER')")
     @PostMapping("/quartiers")
     public ResponseEntity<AApiResponse<QuartierDto>> createQuartier(@RequestBody QuartierRequest request) {
         QuartierDto created = geolocationService.createQuartier(request);
@@ -75,6 +80,7 @@ public class GeolocationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_MODIFIER')")
     @PutMapping("/quartiers/{id}")
     public ResponseEntity<AApiResponse<QuartierDto>> updateQuartier(
             @PathVariable Long id,
@@ -88,6 +94,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_SUPPRIMER')")
     @DeleteMapping("/quartiers/{id}")
     public ResponseEntity<AApiResponse<Void>> deleteQuartier(@PathVariable Long id) {
         geolocationService.deleteQuartier(id);
@@ -97,6 +104,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_QUARTIERS_VOIR')")
     @GetMapping("/quartiers/{id}/points")
     public ResponseEntity<AApiResponse<PointRepereDto>> getPointsByQuartier(@PathVariable Long id) {
         List<PointRepereDto> points = geolocationService.getPointsByQuartier(id);
@@ -110,6 +118,7 @@ public class GeolocationController {
 
     // ─── POINTS DE REPÈRE ─────────────────────────────────────────────────────
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_VOIR')")
     @GetMapping("/points")
     public ResponseEntity<AApiResponse<PointRepereDto>> getAllPoints(
             @RequestParam(defaultValue = "0") int offset,
@@ -126,6 +135,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_VOIR')")
     @GetMapping("/points/search")
     public ResponseEntity<AApiResponse<PointRepereDto>> searchPoints(
             @RequestParam String q,
@@ -143,6 +153,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_VOIR')")
     @GetMapping("/points/proches")
     public ResponseEntity<AApiResponse<PointRepereDto>> getPointsProches(
             @RequestParam Double latitude,
@@ -157,6 +168,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_CREER')")
     @PostMapping("/points")
     public ResponseEntity<AApiResponse<PointRepereDto>> createPointRepere(@RequestBody PointRepereRequest request) {
         PointRepereDto created = geolocationService.createPointRepere(request);
@@ -168,6 +180,7 @@ public class GeolocationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_MODIFIER')")
     @PutMapping("/points/{id}")
     public ResponseEntity<AApiResponse<PointRepereDto>> updatePointRepere(
             @PathVariable Long id,
@@ -181,6 +194,7 @@ public class GeolocationController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has('GEOLOCALISATION_POINTS_SUPPRIMER')")
     @DeleteMapping("/points/{id}")
     public ResponseEntity<AApiResponse<Void>> deletePointRepere(@PathVariable Long id) {
         geolocationService.deletePointRepere(id);

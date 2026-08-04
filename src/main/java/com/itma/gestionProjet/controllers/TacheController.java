@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -25,6 +26,7 @@ public class TacheController {
     @Autowired
     private TacheServiceImpl tacheService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_CREER')")
     @PostMapping
 
     public ResponseEntity<AApiResponse<Tache>> createTache(@RequestBody Tache tache,@RequestParam Long projectId) {
@@ -47,6 +49,7 @@ public class TacheController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<TacheDTO>> getTaches(
             @RequestParam(defaultValue = "0") int offset,
@@ -68,31 +71,36 @@ public class TacheController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<Tache> getTacheById(@PathVariable Long id) {
+    public ResponseEntity<Tache> getTacheById(@PathVariable Long id, @RequestParam Long projectId) {
         Tache tache = tacheService.getTacheById(id);
         return tache != null ? new ResponseEntity<>(tache, HttpStatus.OK) : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_MODIFIER')")
     @PutMapping("/{id}")
-    public ResponseEntity<TacheDTO> updateTache(@PathVariable Long id, @RequestBody Tache tache) {
+    public ResponseEntity<TacheDTO> updateTache(@PathVariable Long id, @RequestBody Tache tache, @RequestParam Long projectId) {
         TacheDTO updatedTache = tacheService.updateTache(id, tache);
         return new ResponseEntity<>(updatedTache, HttpStatus.OK);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTache(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTache(@PathVariable Long id, @RequestParam Long projectId) {
         tacheService.deleteTache(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'TACHES_VOIR')")
     @GetMapping("/consultant/{userId}")
     public ResponseEntity<AApiResponse<TacheResponseDTO>> getTachesByUserId(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int max,
-            @RequestParam(defaultValue = "id,asc") String[] sort) {
+            @RequestParam(defaultValue = "id,asc") String[] sort,
+            @RequestParam Long projectId) {
 
         try {
             Pageable pageable = PageRequest.of(offset, max, Sort.by(Sort.Order.asc("id")));

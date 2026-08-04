@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -21,8 +22,9 @@ public class EntenteCompensationController {
     private EntenteCompensationService ententeCompensationService;
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<EntenteCompensationDto>> createEntenteCompensation(@RequestBody EntenteCompensationDto ententeCompensationDto) {
+    public ResponseEntity<AApiResponse<EntenteCompensationDto>> createEntenteCompensation(@RequestBody EntenteCompensationDto ententeCompensationDto, @RequestParam Long projectId) {
         AApiResponse<EntenteCompensationDto> response = new AApiResponse<>();
         try {
             EntenteCompensationDto savedEntenteCompensation = ententeCompensationService.createEntenteCompensation(ententeCompensationDto);
@@ -38,18 +40,21 @@ public class EntenteCompensationController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<EntenteCompensationDto> getEntenteCompensationById(@PathVariable Long id) {
+    public ResponseEntity<EntenteCompensationDto> getEntenteCompensationById(@PathVariable Long id, @RequestParam Long projectId) {
         EntenteCompensationDto ententeCompensation = ententeCompensationService.getEntenteCompensationById(id);
         return ResponseEntity.ok(ententeCompensation);
     }
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<EntenteCompensationDto>> getAllEntenteCompensations(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int max) {
+            @RequestParam(defaultValue = "10") int max,
+            @RequestParam(required = false) Long projectId) {
 
         Pageable pageable = PageRequest.of(offset, max);
         Page<EntenteCompensationDto> ententeCompensationPage = ententeCompensationService.getAllEntenteCompensations(pageable);
@@ -67,15 +72,17 @@ public class EntenteCompensationController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEntenteCompensation(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEntenteCompensation(@PathVariable Long id, @RequestParam Long projectId) {
         ententeCompensationService.deleteEntenteCompensation(id);
         return ResponseEntity.noContent().build();
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/by-codePap")
-    public ResponseEntity<AApiResponse<EntenteCompensationDto>> getEntenteByCodePap(@RequestParam String codePap) {
+    public ResponseEntity<AApiResponse<EntenteCompensationDto>> getEntenteByCodePap(@RequestParam String codePap, @RequestParam Long projectId) {
         AApiResponse<EntenteCompensationDto> response = ententeCompensationService.getEntenteCompensationByCodePap(codePap);
         return ResponseEntity.status(response.getResponseCode()).body(response);
     }

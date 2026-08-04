@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -30,6 +31,8 @@ public class PlainteUserController {
 
 
 
+    // Public par conception : formulaire de plainte du grand public sur la page d'accueil, sans
+    // authentification (voir PUBLIC_POST_URLs dans UserRegistrationSecurityConfig).
     @PostMapping
     public ResponseEntity<AApiResponse<PlainteUserDTO>> createComplaint(@RequestBody PlainteUserDTO plainteUserDTO)  {
         PlainteUser plainteUser = plainteUserService.createComplaint(plainteUserDTO);
@@ -92,6 +95,9 @@ public class PlainteUserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // Pas de notion de projet sur PlainteUser (intake public non trié) : réservé au staff interne
+    // tant qu'aucun écran de triage n'existe côté frontend.
+    @PreAuthorize("@permissionChecker.has('PLAINTES_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<PlainteUserDTO>> getAllComplaints() {
         List<PlainteUser> complaints = plainteUserService.getAllComplaints();

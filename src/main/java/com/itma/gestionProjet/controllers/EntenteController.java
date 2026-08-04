@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -29,6 +30,7 @@ public class EntenteController {
     private final EntenteService ententeService;
     private final ProcessusEntenteService processusService;
     private final ModificationEntenteService modificationService;
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_CREER')")
     @PostMapping
     public ResponseEntity<?> createEntente(
             @RequestParam Long papId,
@@ -51,6 +53,7 @@ public class EntenteController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_CREER')")
     @PostMapping("/{projectId}/auto-create")
     public ResponseEntity<?> autoCreateEntentesForProject(@PathVariable Long projectId) {
         try {
@@ -85,6 +88,7 @@ public class EntenteController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping()
     public ResponseEntity<AApiResponse<EntenteDetailsDTO>> getEntentesByProject(
             @RequestParam(required = false) Long projectId,
@@ -103,8 +107,9 @@ public class EntenteController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<EntenteDetailsDTO> getEntenteDetails(@PathVariable Long id) {
+    public ResponseEntity<EntenteDetailsDTO> getEntenteDetails(@PathVariable Long id, @RequestParam Long projectId) {
         return ResponseEntity.ok(ententeService.getEntenteDetails(id));
     }
 
@@ -118,8 +123,9 @@ public class EntenteController {
 //        return ResponseEntity.ok(ententeService.finaliserEntente(id));
 //    }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{id}/synchroniser")
-    public ResponseEntity<AApiResponse<Entente>> synchroniserEntente(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Entente>> synchroniserEntente(@PathVariable Long id, @RequestParam Long projectId) {
         Entente ententeSynchronisee = ententeService.synchroniserEntente(id);
         AApiResponse<Entente> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -131,8 +137,9 @@ public class EntenteController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{id}/finaliser")
-    public ResponseEntity<AApiResponse<Entente>> finaliserEntente(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Entente>> finaliserEntente(@PathVariable Long id, @RequestParam Long projectId) {
         Entente ententeFinalisee = ententeService.finaliserEntente(id);
         AApiResponse<Entente> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -144,56 +151,69 @@ public class EntenteController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{id}/processus/etablir-compensation")
-    public ResponseEntity<Entente> etablirCompensation(@PathVariable Long id) {
+    public ResponseEntity<Entente> etablirCompensation(@PathVariable Long id, @RequestParam Long projectId) {
         return ResponseEntity.ok(processusService.etablirCompensation(id));
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{id}/processus/informer-pap")
     public ResponseEntity<Entente> informerPap(
             @PathVariable Long id,
-            @RequestBody InformerPapRequest request) {
+            @RequestBody InformerPapRequest request,
+            @RequestParam Long projectId) {
         String modeInformation = request.getModeInformation();
         String detailsInformation = request.getDetailsInformation();
         return ResponseEntity.ok(processusService.informerPap(id, modeInformation,detailsInformation));
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{ententeId}/processus/obtenir-accord")
     public ResponseEntity<Entente> obtenirAccord(
             @PathVariable Long ententeId,
-            @RequestParam String preuveAccord) {
+            @RequestParam String preuveAccord,
+            @RequestParam Long projectId) {
         return ResponseEntity.ok(processusService.obtenirAccordPap(ententeId, preuveAccord));
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{ententeId}/processus/effectuer-paiement")
     public ResponseEntity<Entente> effectuerPaiement(
             @PathVariable Long ententeId,
 //            @RequestParam String modePaiement,
-            @RequestParam String referencePaiement) {
+            @RequestParam String referencePaiement,
+            @RequestParam Long projectId) {
         return ResponseEntity.ok(processusService.effectuerPaiement(ententeId, referencePaiement));
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{ententeId}/processus/donner-formation")
     public ResponseEntity<Entente> donnerFormation(
             @PathVariable Long ententeId,
             @RequestParam String typeFormation,
-            @RequestParam String formateur) {
+            @RequestParam String formateur,
+            @RequestParam Long projectId) {
         return ResponseEntity.ok(processusService.donnerFormation(ententeId, typeFormation, formateur));
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VALIDER')")
     @PostMapping("/{ententeId}/processus/effectuer-suivi")
     public ResponseEntity<Entente> effectuerSuivi(
             @PathVariable Long ententeId,
             @RequestParam String resultatSuivi,
-            @RequestParam String commentairesSuivi) {
+            @RequestParam String commentairesSuivi,
+            @RequestParam Long projectId) {
         return ResponseEntity.ok(processusService.effectuerSuivi(ententeId, resultatSuivi, commentairesSuivi));
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_MODIFIER')")
     @PatchMapping("/{ententeId}/edit-ententes")
     public ResponseEntity<AApiResponse<Entente>> modifierEntente(
             @PathVariable Long ententeId,
-            @RequestBody ModificationEntenteDTO request) {
+            @RequestBody ModificationEntenteDTO request,
+            @RequestParam Long projectId) {
 
         ModificationEntenteDTO dto = new ModificationEntenteDTO();
         dto.setEntenteId(ententeId);
@@ -215,12 +235,14 @@ public class EntenteController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_MODIFIER')")
     @PatchMapping("/{ententeId}/mode-paiement")
     public ResponseEntity<Entente> modifierModePaiement(
             @PathVariable Long ententeId,
             @RequestParam String modePaiement,
             @RequestParam String raisonModification,
-            @RequestParam String utilisateur) {
+            @RequestParam String utilisateur,
+            @RequestParam Long projectId) {
 
         Map<String, Object> modifications = new HashMap<>();
         modifications.put("modePaiement", modePaiement);
@@ -236,8 +258,9 @@ public class EntenteController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/byCodePap")
-    public ResponseEntity<AApiResponse<EntenteDetailsDTO>> getEntenteByCodePap(@RequestParam String codePap) {
+    public ResponseEntity<AApiResponse<EntenteDetailsDTO>> getEntenteByCodePap(@RequestParam String codePap, @RequestParam Long projectId) {
         try {
             EntenteDetailsDTO entente = ententeService.getEntenteByCodePap(codePap);
             List<EntenteDetailsDTO> data = Collections.singletonList(entente);

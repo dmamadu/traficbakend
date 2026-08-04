@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -46,6 +47,12 @@ public class UserRegistrationSecurityConfig {
             "/users/reset",
             "/users/reset-password",
             "/users/verifyEmail"
+    };
+
+    // Formulaire de plainte public (page "accueil" du frontend, sans authentification) — seule la
+    // soumission (POST) est publique ; la consultation (GET, écran de gestion interne) reste protégée.
+    private static final String[] PUBLIC_POST_URLs = {
+            "/complaints"
     };
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -100,7 +107,8 @@ public class UserRegistrationSecurityConfig {
                 }))
                 .authorizeHttpRequests()
                 .requestMatchers(UN_SECURED_URLs).permitAll()
-                .requestMatchers(PUBLIC_USER_URLs).permitAll().and()
+                .requestMatchers(PUBLIC_USER_URLs).permitAll()
+                .requestMatchers(HttpMethod.POST, PUBLIC_POST_URLs).permitAll().and()
                 .authorizeHttpRequests().requestMatchers(SECURED_URLs)
                 .hasAuthority("Super Admin").anyRequest()
                 .authenticated()

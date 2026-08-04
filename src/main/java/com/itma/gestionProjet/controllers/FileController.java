@@ -6,6 +6,7 @@ import com.itma.gestionProjet.services.imp.FileService;
 import com.itma.gestionProjet.services.imp.ImageService;
 import com.itma.gestionProjet.services.imp.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ public class FileController {
     @Autowired
     ProjectService projectService;
 
+    @PreAuthorize("@permissionChecker.has(#idProd, 'DOCUMENTS_CREER')")
     @PostMapping(value = "/uploadFilesProd/{idProd}" )
     public File uploadMultiImages(@RequestParam("file") MultipartFile file,
                                   @PathVariable("idProd") Long idProd)
@@ -32,6 +34,7 @@ public class FileController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DOCUMENTS_MODIFIER')")
     @PostMapping(value = "/update/{projectId}" )
     public List<File> uploadFiles(@RequestParam("files") MultipartFile[] files, @PathVariable("projectId") Long projectId) {
         try {
@@ -50,6 +53,7 @@ public class FileController {
 
      */
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DOCUMENTS_SUPPRIMER')")
     @RequestMapping(value = "/delete/{projectId}" )
     public List<File> deletefiles(@PathVariable("projectId") Long projectId) {
         try {

@@ -25,29 +25,35 @@ public class RoleController {
         this.roleService = roleService;
     }
 
+    @PreAuthorize("@permissionChecker.has('ROLES_VOIR')")
     @RequestMapping(path = "/all", method = RequestMethod.GET)
     public AApiResponse<Role> getRoles() {
         List<Role> roles = roleService.getAllRoles();
         return new AApiResponse<>(200, roles, 0, roles.size(), "Roles retrieved successfully", roles.size());
     }
 
+    @PreAuthorize("@permissionChecker.has('ROLES_CREER')")
     @RequestMapping(path = "/createRole", method = RequestMethod.POST)
     public AApiResponse<RoleDTO> createRole(@RequestBody RoleRequest roleRequest) {
         RoleDTO createdRole = roleService.saveRole(roleRequest);
         return new AApiResponse<>(201, List.of(createdRole), 0, 1, "Role created successfully", 1);
     }
 
+    @PreAuthorize("@permissionChecker.has('ROLES_MODIFIER')")
     @RequestMapping(path = "/updateRole/{id}", method = RequestMethod.PUT)
     public AApiResponse<RoleDTO> updateRole(@RequestBody RoleRequest roleRequest,@PathVariable Long id) {
         RoleDTO updatedRole = roleService.updateRole(id,roleRequest);
         return new AApiResponse<>(200, List.of(updatedRole), 0, 1, "Role updated successfully", 1);
     }
+
+    @PreAuthorize("@permissionChecker.has('ROLES_SUPPRIMER')")
     @RequestMapping(path = "/deleteRole/{id}", method = RequestMethod.DELETE)
     public AApiResponse<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRoleById(id);
         return new AApiResponse<>(200, null, 0, 1, "Role deleted successfully", 1);
     }
 
+    @PreAuthorize("@permissionChecker.has('ROLES_VOIR')")
     @GetMapping("/{id}")
     public AApiResponse<RoleDTO> getRole(@PathVariable Long id) {
         RoleDTO role = roleService.getRole(id);

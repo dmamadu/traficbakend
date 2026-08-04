@@ -7,6 +7,7 @@ import com.itma.gestionProjet.services.imp.SituationMatrimonialeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,10 +20,12 @@ public class SituationMatrimonialeController {
     @Autowired
     private SituationMatrimonialeService situationMatrimonialeService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("")
     public ResponseEntity<AApiResponse<SituationMatrimoniale>> getSituationsMatrimoniales(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int max) {
+            @RequestParam(defaultValue = "10") int max,
+            @RequestParam(required = false) Long projectId) {
 
         Page<SituationMatrimoniale> situationsPage = situationMatrimonialeService.getSituationsMatrimoniales(offset, max);
 

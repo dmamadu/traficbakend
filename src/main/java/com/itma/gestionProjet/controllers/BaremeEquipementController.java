@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,8 +20,9 @@ public class BaremeEquipementController {
     @Autowired
     private BaremeEquipementService baremeEquipementService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> createBaremeEquipements(@RequestBody List<BaremeEquipementRequest> requests) {
+    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> createBaremeEquipements(@RequestBody List<BaremeEquipementRequest> requests, @RequestParam Long projectId) {
         try {
             List<BaremeEquipementDTO> baremeEquipementDTOs = baremeEquipementService.createBaremeEquipements(requests);
             return ResponseEntity.ok(new AApiResponse<>(200, baremeEquipementDTOs, 0, baremeEquipementDTOs.size(), "Equipements ajoutés avec succès", baremeEquipementDTOs.size()));
@@ -29,8 +31,9 @@ public class BaremeEquipementController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
-    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> getAllBaremeEquipements(Pageable pageable) {
+    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> getAllBaremeEquipements(Pageable pageable, @RequestParam(required = false) Long projectId) {
         try {
             Page<BaremeEquipementDTO> baremeEquipementDTOs = baremeEquipementService.getAllBaremeEquipements(pageable);
             return ResponseEntity.ok(new AApiResponse<>(200, baremeEquipementDTOs.getContent(), pageable.getPageNumber(), pageable.getPageSize(), "Liste des équipements", baremeEquipementDTOs.getTotalElements()));
@@ -39,8 +42,9 @@ public class BaremeEquipementController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> getBaremeEquipementById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<BaremeEquipementDTO>> getBaremeEquipementById(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             BaremeEquipementDTO baremeEquipementDTO = baremeEquipementService.getBaremeEquipementById(id);
             return ResponseEntity.ok(new AApiResponse<>(200, List.of(baremeEquipementDTO), 0, 1, "Equipement trouvé", 1));
@@ -49,6 +53,7 @@ public class BaremeEquipementController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<BaremeEquipementDTO>> updateBaremeEquipement(@PathVariable Long id, @RequestBody BaremeEquipementRequest request) {
         try {
@@ -59,8 +64,9 @@ public class BaremeEquipementController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteBaremeEquipement(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteBaremeEquipement(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             baremeEquipementService.deleteBaremeEquipement(id);
             return ResponseEntity.ok(new AApiResponse<>(200, null, 0, 0, "Equipement supprimé avec succès", 0));

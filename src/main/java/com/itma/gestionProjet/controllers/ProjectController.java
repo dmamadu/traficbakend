@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class ProjectController {
 
     @Autowired
     private ProjectRepository projectRepository;
+    @PreAuthorize("@permissionChecker.has('PROJETS_VOIR')")
     @RequestMapping(path = "/all", method = RequestMethod.GET)
     public ApiResponse<List<ProjectDTO>> getUsers() {
         List<ProjectDTO> projects = projectService.getAllProjects();
@@ -57,6 +59,7 @@ public class ProjectController {
 //            return   new ApiResponse<>(HttpStatus.OK.value(), "Projet Créé avec succées crée avec succés",projectDTO);
 //        }
 //    }
+@PreAuthorize("@permissionChecker.has('PROJETS_CREER')")
 @RequestMapping(path = "/createProject/{userId}", method = RequestMethod.POST)
 public ApiResponse<User> createProject(
         @PathVariable Long userId,
@@ -72,6 +75,7 @@ public ApiResponse<User> createProject(
     }
 }
 
+    @PreAuthorize("@permissionChecker.has('PROJETS_MODIFIER')")
     @PostMapping("/updateProject")
     public ApiResponse<Project> updateProject(@RequestBody ProjectRequest projectRequest) {
         try {
@@ -87,6 +91,7 @@ public ApiResponse<User> createProject(
     }
 
 
+    @PreAuthorize("@permissionChecker.has('PROJETS_VOIR')")
     @GetMapping("/{id}")
     public ApiResponse<ProjectDTO> getProjectById(@PathVariable Long id) {
         Optional<ProjectDTO> projectDTO = projectService.findProjectById(id);
@@ -98,6 +103,7 @@ public ApiResponse<User> createProject(
     }
 
 
+    @PreAuthorize("@permissionChecker.has('PROJETS_SUPPRIMER')")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<?> deleteProject(@PathVariable Long id) throws Exception {
         try {

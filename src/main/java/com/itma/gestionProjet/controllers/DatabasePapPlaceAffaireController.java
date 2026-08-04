@@ -22,8 +22,9 @@ public class DatabasePapPlaceAffaireController {
     @Autowired
     private DatabasePapPlaceAffaireService databasePapPlaceAffaireService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<Object>> create(@RequestBody List<DatabasePapPlaceAffaireRequestDTO> requestDTOs) {
+    public ResponseEntity<AApiResponse<Object>> create(@RequestBody List<DatabasePapPlaceAffaireRequestDTO> requestDTOs, @RequestParam Long projectId) {
         try {
             databasePapPlaceAffaireService.createDatabasePapPlaceAffaire(requestDTOs);
             AApiResponse<Object> successResponse = new AApiResponse<>();
@@ -45,12 +46,14 @@ public class DatabasePapPlaceAffaireController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/vulnerability-stats")
     public ResponseEntity<Map<String, Object>> getVulnerabilityStats( @RequestParam(required = false) Long projectId) {
         Map<String,Object> stats = databasePapPlaceAffaireService.getVulnerabilityStats(projectId);
         return ResponseEntity.ok(stats);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<DatabasePapPlaceAffaireResponseDTO> getAll(
             @RequestParam(required = false) Long projectId,
@@ -85,6 +88,7 @@ public class DatabasePapPlaceAffaireController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/search")
     public AApiResponse<DatabasePapPlaceAffaireResponseDTO> searchGlobal(
             @RequestParam String searchTerm,
@@ -110,11 +114,13 @@ public class DatabasePapPlaceAffaireController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public DatabasePapPlaceAffaireResponseDTO getById(@PathVariable Long id) {
+    public DatabasePapPlaceAffaireResponseDTO getById(@PathVariable Long id, @RequestParam Long projectId) {
         return databasePapPlaceAffaireService.getDatabasePapPlaceAffaireById(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#requestDTO.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<String>> update(@PathVariable Long id, @RequestBody DatabasePapPlaceAffaireRequestDTO requestDTO) {
         try {
@@ -139,8 +145,9 @@ public class DatabasePapPlaceAffaireController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<String> delete(@PathVariable Long id) {
+    public AApiResponse<String> delete(@PathVariable Long id, @RequestParam Long projectId) {
         databasePapPlaceAffaireService.deleteDatabasePapPlaceAffaire(id);
         AApiResponse<String> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -149,8 +156,9 @@ public class DatabasePapPlaceAffaireController {
         return response;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/byCodePap/{codePap}")
-    public ResponseEntity<AApiResponse<DatabasePapPlaceAffaire>> getByCodePap(@PathVariable String codePap) {
+    public ResponseEntity<AApiResponse<DatabasePapPlaceAffaire>> getByCodePap(@PathVariable String codePap, @RequestParam Long projectId) {
         DatabasePapPlaceAffaire papPlaceAffaire = databasePapPlaceAffaireService.getByCodePap(codePap);
         AApiResponse<DatabasePapPlaceAffaire> response = new AApiResponse<>(
                 200,
@@ -165,6 +173,7 @@ public class DatabasePapPlaceAffaireController {
 
 
     // Vider tous les PAPs d'un projet
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/project/{projectId}")
     public ResponseEntity<AApiResponse<String>> deleteAllByProjectId(@PathVariable Long projectId) {
         try {

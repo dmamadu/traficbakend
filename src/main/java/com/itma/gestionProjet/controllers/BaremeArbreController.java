@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,14 +19,16 @@ public class BaremeArbreController {
     @Autowired
     private BaremeArbreService baremeArbreService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<BaremeArbreDTO>> createBaremeArbres(@RequestBody List<BaremeArbreRequest> requests) {
+    public ResponseEntity<AApiResponse<BaremeArbreDTO>> createBaremeArbres(@RequestBody List<BaremeArbreRequest> requests, @RequestParam Long projectId) {
         AApiResponse<BaremeArbreDTO> response = baremeArbreService.createBaremeArbres(requests);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
-    public ResponseEntity<AApiResponse<BaremeArbreDTO>> getAllBaremeArbre(Pageable pageable) {
+    public ResponseEntity<AApiResponse<BaremeArbreDTO>> getAllBaremeArbre(Pageable pageable, @RequestParam(required = false) Long projectId) {
         Page<BaremeArbreDTO> baremeArbresPage = baremeArbreService.getAllBaremeArbre(pageable);
         AApiResponse<BaremeArbreDTO> response = new AApiResponse<>(
                 200,
@@ -38,8 +41,9 @@ public class BaremeArbreController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<BaremeArbreDTO>> getBaremeArbreById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<BaremeArbreDTO>> getBaremeArbreById(@PathVariable Long id, @RequestParam Long projectId) {
         BaremeArbreDTO baremeArbreDTO = baremeArbreService.getBaremeArbreById(id);
         AApiResponse<BaremeArbreDTO> response = new AApiResponse<>(
                 200,
@@ -52,6 +56,7 @@ public class BaremeArbreController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<BaremeArbreDTO>> updateBaremeArbre(@PathVariable Long id, @RequestBody BaremeArbreRequest request) {
         BaremeArbreDTO updatedBaremeArbreDTO = baremeArbreService.updateBaremeArbre(id, request);
@@ -67,8 +72,9 @@ public class BaremeArbreController {
     }
 
     // DELETE : Supprimer un BaremeArbre par ID
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteBaremeArbre(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteBaremeArbre(@PathVariable Long id, @RequestParam Long projectId) {
         baremeArbreService.deleteBaremeArbre(id);
         AApiResponse<Void> response = new AApiResponse<>(
                 200,

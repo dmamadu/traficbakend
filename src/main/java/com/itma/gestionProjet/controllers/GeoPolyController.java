@@ -9,6 +9,7 @@ import com.itma.gestionProjet.services.GeoPolyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -21,8 +22,9 @@ public class GeoPolyController {
     @Autowired
     private GeoPolyService geoPolyService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping()
-    public ResponseEntity<AApiResponse<List<GeoPoly>>> createGeoPoly(@RequestBody List<GeoPolyRequest> geoPolyRequests) {
+    public ResponseEntity<AApiResponse<List<GeoPoly>>> createGeoPoly(@RequestBody List<GeoPolyRequest> geoPolyRequests, @RequestParam Long projectId) {
         AApiResponse<List<GeoPoly>> response = new AApiResponse<>();
         try {
             // Créer les objets GeoPoly
@@ -48,31 +50,38 @@ public class GeoPolyController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<GeoPoly> getAllGeoPolys(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "10") int size) {
+                                                @RequestParam(defaultValue = "10") int size,
+                                                @RequestParam(required = false) Long projectId) {
         return geoPolyService.getAllGeoPolys(page, size);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public AApiResponse<GeoPoly> getGeoPolyById(@PathVariable Long id) {
+    public AApiResponse<GeoPoly> getGeoPolyById(@PathVariable Long id, @RequestParam Long projectId) {
         return geoPolyService.getGeoPolyById(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
-    public AApiResponse<GeoPoly> updateGeoPoly(@PathVariable Long id, @RequestBody GeoPoly geoPoly) {
+    public AApiResponse<GeoPoly> updateGeoPoly(@PathVariable Long id, @RequestBody GeoPoly geoPoly, @RequestParam Long projectId) {
         return geoPolyService.updateGeoPoly(id, geoPoly);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<GeoPoly> deleteGeoPoly(@PathVariable Long id) {
+    public AApiResponse<GeoPoly> deleteGeoPoly(@PathVariable Long id, @RequestParam Long projectId) {
         return geoPolyService.deleteGeoPoly(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<List<GeoPoly>>> getGeoPolyByCodePap(@RequestParam String codePap,
                                                                                @RequestParam(defaultValue = "0") int offset,
-                                                                               @RequestParam(defaultValue = "100") int max) {
+                                                                               @RequestParam(defaultValue = "100") int max,
+                                                                               @RequestParam Long projectId) {
         AApiResponse<List<GeoPoly>> response = geoPolyService.getGeoPolyByCodePap(codePap, offset, max);
         if (response.getData() == null) {
             return ResponseEntity.status(response.getResponseCode()).body(response);

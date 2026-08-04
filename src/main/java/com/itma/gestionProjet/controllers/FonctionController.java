@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -19,6 +20,7 @@ public class FonctionController {
     @Autowired
     private FonctionService fonctionService;
 
+    @PreAuthorize("@permissionChecker.has('FONCTIONS_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<FonctionDto>> getAllFonctions(Pageable pageable) {
         Page<FonctionDto> fonctions = fonctionService.getAllFonctions(pageable);
@@ -26,24 +28,28 @@ public class FonctionController {
                 pageable.getPageSize(), "Success", fonctions.getTotalElements()));
     }
 
+    @PreAuthorize("@permissionChecker.has('FONCTIONS_VOIR')")
     @GetMapping("/{id}")
     public ResponseEntity<AApiResponse<FonctionDto>> getFonctionById(@PathVariable Long id) {
         FonctionDto fonction = fonctionService.getFonctionById(id);
         return ResponseEntity.ok(new AApiResponse<>(200, Collections.singletonList(fonction), 0, 1, "Fonction found", 1));
     }
 
+    @PreAuthorize("@permissionChecker.has('FONCTIONS_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<FonctionDto>> createFonction(@RequestBody CategorieRequest fonctionDto) {
         FonctionDto created = fonctionService.createFonction(fonctionDto);
         return ResponseEntity.ok(new AApiResponse<>(201, Collections.singletonList(created), 0, 1, "Fonction created", 1));
     }
 
+    @PreAuthorize("@permissionChecker.has('FONCTIONS_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<FonctionDto>> updateFonction(@PathVariable Long id, @RequestBody CategorieRequest fonctionDto) {
         FonctionDto updated = fonctionService.updateFonction(id, fonctionDto);
         return ResponseEntity.ok(new AApiResponse<>(200, Collections.singletonList(updated), 0, 1, "Fonction updated", 1));
     }
 
+    @PreAuthorize("@permissionChecker.has('FONCTIONS_SUPPRIMER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<AApiResponse<Void>> deleteFonction(@PathVariable Long id) {
         fonctionService.deleteFonction(id);

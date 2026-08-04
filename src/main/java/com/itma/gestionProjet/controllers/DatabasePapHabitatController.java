@@ -22,8 +22,9 @@ public class DatabasePapHabitatController {
     @Autowired
     private DatabasePapHabitatService service;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<Object>> create(@RequestBody List<DatabasePapHabitatRequestDTO> requestDTOs) {
+    public ResponseEntity<AApiResponse<Object>> create(@RequestBody List<DatabasePapHabitatRequestDTO> requestDTOs, @RequestParam Long projectId) {
         try {
             service.create(requestDTOs);
             AApiResponse<Object> success = new AApiResponse<>();
@@ -39,6 +40,7 @@ public class DatabasePapHabitatController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<DatabasePapHabitatResponseDTO> getAll(@RequestParam(required = false) Long projectId,
                                                               @RequestParam(defaultValue = "0") int offset,
@@ -62,6 +64,7 @@ public class DatabasePapHabitatController {
         return resp;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/search")
     public AApiResponse<DatabasePapHabitatResponseDTO> searchGlobal(@RequestParam String searchTerm,
                                                                     @RequestParam(required = false) Long projectId,
@@ -79,15 +82,18 @@ public class DatabasePapHabitatController {
         return resp;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/vulnerability-stats")
     public ResponseEntity<Map<String, Object>> getVulnerabilityStats(@RequestParam(required = false) Long projectId) {
         Map<String, Object> stats = service.getVulnerabilityStats(projectId);
         return ResponseEntity.ok(stats);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public DatabasePapHabitatResponseDTO getById(@PathVariable Long id) { return service.getById(id); }
+    public DatabasePapHabitatResponseDTO getById(@PathVariable Long id, @RequestParam Long projectId) { return service.getById(id); }
 
+    @PreAuthorize("@permissionChecker.has(#dto.projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<String>> update(@PathVariable Long id, @RequestBody DatabasePapHabitatRequestDTO dto) {
         try {
@@ -105,8 +111,9 @@ public class DatabasePapHabitatController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<String> delete(@PathVariable Long id) {
+    public AApiResponse<String> delete(@PathVariable Long id, @RequestParam Long projectId) {
         service.delete(id);
         AApiResponse<String> r = new AApiResponse<>();
         r.setResponseCode(200);
@@ -115,6 +122,7 @@ public class DatabasePapHabitatController {
         return r;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/project/{projectId}")
     public ResponseEntity<AApiResponse<String>> deleteAllByProjectId(@PathVariable Long projectId) {
         try {

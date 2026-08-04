@@ -10,6 +10,7 @@ import com.itma.gestionProjet.services.LettreConsentementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,13 +23,16 @@ public class LettreConsentementController {
 
     @Autowired
     private  PersonneAffecteRepository personneAffecteRepository;
+
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
-    public List<LettreConsentement> getAllLettresConsentement() {
+    public List<LettreConsentement> getAllLettresConsentement(@RequestParam(required = false) Long projectId) {
         return lettreConsentementService.getAllLettresConsentement();
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<LettreConsentement> getLettreConsentementById(@PathVariable Long id) {
+    public ResponseEntity<LettreConsentement> getLettreConsentementById(@PathVariable Long id, @RequestParam Long projectId) {
         LettreConsentement lettreConsentement = lettreConsentementService.getLettreConsentementById(id);
         if (lettreConsentement != null) {
             return ResponseEntity.ok(lettreConsentement);
@@ -36,8 +40,9 @@ public class LettreConsentementController {
         return ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> createLettreConsentement(@RequestBody LettreConsentementDTO lettreConsentementDTO) {
+    public ResponseEntity<ApiResponse<?>> createLettreConsentement(@RequestBody LettreConsentementDTO lettreConsentementDTO, @RequestParam Long projectId) {
         try {
             PersonneAffecte personneAffecte = personneAffecteRepository.findById(lettreConsentementDTO.getPartie_affecte_id())
                     .orElseThrow(() -> new UserNotFoundException("PersonneAffecte not found"));
@@ -57,8 +62,9 @@ public class LettreConsentementController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
-    public ResponseEntity<LettreConsentement> updateLettreConsentement(@PathVariable Long id, @RequestBody LettreConsentement lettreConsentement) {
+    public ResponseEntity<LettreConsentement> updateLettreConsentement(@PathVariable Long id, @RequestBody LettreConsentement lettreConsentement, @RequestParam Long projectId) {
         LettreConsentement updatedLettre = lettreConsentementService.updateLettreConsentement(id, lettreConsentement);
         if (updatedLettre != null) {
             return ResponseEntity.ok(updatedLettre);
@@ -66,15 +72,17 @@ public class LettreConsentementController {
         return ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLettreConsentement(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteLettreConsentement(@PathVariable Long id, @RequestParam Long projectId) {
         lettreConsentementService.deleteLettreConsentement(id);
         return ResponseEntity.noContent().build();
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/personne_affecte/{id}")
-    public ResponseEntity<ApiResponse<LettreConsentement>> getLettreConsentementByPersonneAffecte(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<LettreConsentement>> getLettreConsentementByPersonneAffecte(@PathVariable Long id, @RequestParam Long projectId) {
         PersonneAffecte personneAffecte = new PersonneAffecte();
         personneAffecte.setId(id);
         LettreConsentement lettreConsentement = lettreConsentementService.getLettreConsentementByPersonneAffecte(personneAffecte);

@@ -89,6 +89,7 @@ public class UserController {
         this.tokenRepository = tokenRepository;
     }
 
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_VOIR')")
     @RequestMapping(path = "/all", method = RequestMethod.GET)
 
     public ApiResponse<List<UserDTO>> getUsers() {
@@ -98,6 +99,7 @@ public class UserController {
 
 
 
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_VOIR')")
     @RequestMapping("projects")
     @GetMapping
     public ResponseEntity<AApiResponse<User>> getUsers(
@@ -122,7 +124,7 @@ public class UserController {
 
 
     @RequestMapping(path = "/createUser", method = RequestMethod.POST)
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_CREER')")
     public  ApiResponse<User> createUser(@Valid @RequestBody UserRequest userRequest, final HttpServletRequest request) {
         User user = userService.saveUser(userRequest);
         publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
@@ -130,7 +132,7 @@ public class UserController {
     }
 
     @RequestMapping(path = "/updateUser/{userId}", method = RequestMethod.PUT)
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_MODIFIER')")
     public ApiResponse<User> updateUser(@PathVariable Long userId, @RequestBody UserRequest userRequest, final HttpServletRequest request) {
         try {
             // Call the service layer to update the user
@@ -149,6 +151,7 @@ public class UserController {
 
 
 
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_VOIR')")
     @GetMapping("/{id}")
     public ApiResponse<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.findById((id));
@@ -322,7 +325,7 @@ public class UserController {
 
 //creation des maitres d'ouvrages
     @RequestMapping(path = "/createMaitreOuvrage", method = RequestMethod.POST)
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('MAITRES_OUVRAGE_CREER')")
     public  ApiResponse<User> createMO(@RequestBody MoRequest userRequest, final HttpServletRequest request) {
       //  ProjectDTO projectDTO = projectService.saveProject(projectRequest);
         User user = userService.saveMo(userRequest);
@@ -332,7 +335,7 @@ public class UserController {
     }
 
     @RequestMapping(path = "/createConsultant", method = RequestMethod.POST)
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('CONSULTANTS_CREER')")
     public  ApiResponse<User> createConsultant(@RequestBody UserRequest userRequest, final HttpServletRequest request) {
         //  ProjectDTO projectDTO = projectService.saveProject(projectRequest);
         User user = userService.saveConsultant(userRequest);
@@ -342,6 +345,7 @@ public class UserController {
     }
 
 //liste des maitres d'ouvrages
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_VOIR')")
     @RequestMapping(path = "/by_role", method = RequestMethod.GET)
     public ApiResponse<List<User>> getMaitresOuvrages(@RequestParam String roleName) {
         List<User> users = userService.getUsersByRoleName(roleName);
@@ -350,6 +354,7 @@ public class UserController {
 
 
 
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_VOIR')")
     @RequestMapping("by_role/projects")
     @GetMapping
     public ResponseEntity<AApiResponse<User>> getMaitresOuvragesByProject(
@@ -375,7 +380,7 @@ public class UserController {
 
 
     @DeleteMapping("/deleteMaitreOuvrage/{id}")
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_SUPPRIMER')")
     public ApiResponse<?> deleteUser(@PathVariable Long id) throws Exception {
         try {
             userService.deleteUserById(id);
@@ -386,7 +391,7 @@ public class UserController {
     }
 
     @PutMapping("/updateMaitreOuvrage/{id}")
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('MAITRES_OUVRAGE_MODIFIER')")
     public ApiResponse<User> updateMo(@RequestBody MoRequest moRequest,@PathVariable Long id) throws Exception {
         try{
             User updatedUser = userService.updateMo(moRequest, id);
@@ -397,7 +402,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/enabled")
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('UTILISATEURS_ACTIVER_DESACTIVER')")
     public ApiResponse<User> toggleEnabled(@PathVariable Long id) {
         User user = userService.toggleEnabled(id);
         String statut = Boolean.TRUE.equals(user.getEnabled()) ? "activé" : "désactivé";
@@ -405,7 +410,7 @@ public class UserController {
     }
 
     @PutMapping("/updateConsultant/{id}")
-    @PreAuthorize("hasAnyAuthority('Super Admin', 'Admin')")
+    @PreAuthorize("@permissionChecker.has('CONSULTANTS_MODIFIER')")
     public  ApiResponse<User> updateConsultant(@RequestBody UserRequest userRequest,@PathVariable Long id) {
         try {
             User user = userService.updateConsultant(id, userRequest);

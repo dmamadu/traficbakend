@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class RencontreController {
     private RencontreService rencontreService;
 
     // Récupérer les rencontres d'un projet
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ELABORATION_PAR_VOIR')")
     @GetMapping("/project/{projectId}")
     public AApiResponse<RencontreDTO> getRencontresByProject(
             @PathVariable Long projectId,
@@ -42,6 +44,7 @@ public class RencontreController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ELABORATION_PAR_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<RencontreDTO>> getRencontresByProject(
             @RequestParam(defaultValue = "0") int offset,
@@ -64,6 +67,7 @@ public class RencontreController {
 
 
     // Créer une nouvelle rencontre
+    @PreAuthorize("@permissionChecker.has(#rencontreDTO.projectId, 'ELABORATION_PAR_CREER')")
     @PostMapping
     public AApiResponse<RencontreDTO> createRencontre(@RequestBody RencontreDTO rencontreDTO) {
         RencontreDTO createdRencontre = rencontreService.createRencontre(rencontreDTO);
@@ -79,6 +83,7 @@ public class RencontreController {
     }
 
     // Mettre à jour une rencontre existante
+    @PreAuthorize("@permissionChecker.has(#rencontreDTO.projectId, 'ELABORATION_PAR_MODIFIER')")
     @PutMapping("/{id}")
     public AApiResponse<RencontreDTO> updateRencontre(@PathVariable Long id, @RequestBody RencontreDTO rencontreDTO) {
         RencontreDTO updatedRencontre = rencontreService.updateRencontre(id, rencontreDTO);
@@ -95,8 +100,9 @@ public class RencontreController {
     }
 
     // Supprimer une rencontre
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ELABORATION_PAR_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<Void> deleteRencontre(@PathVariable Long id) {
+    public AApiResponse<Void> deleteRencontre(@PathVariable Long id, @RequestParam Long projectId) {
         rencontreService.deleteRencontre(id);
 
         AApiResponse<Void> response = new AApiResponse<>();

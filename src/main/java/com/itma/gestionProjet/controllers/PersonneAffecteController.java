@@ -12,6 +12,7 @@ import com.itma.gestionProjet.services.imp.PersonneAffecteServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -39,10 +40,12 @@ public class PersonneAffecteController {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<PersonneAffecteDTO>> getPersonneAffectes(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int max) {
+            @RequestParam(defaultValue = "10") int max,
+            @RequestParam(required = false) Long projectId) {
         Page<PersonneAffecteDTO> personneAffectePage = personneAffecteService.getPersonneAffectes(offset, max);
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -53,14 +56,16 @@ public class PersonneAffecteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<PersonneAffecte> getPersonneAffecteById(@PathVariable Long id) {
+    public ResponseEntity<PersonneAffecte> getPersonneAffecteById(@PathVariable Long id, @RequestParam Long projectId) {
         Optional<PersonneAffecte> personneAffecte = personneAffecteService.getPersonneAffecteById(id);
         return personneAffecte.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
-    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> createPersonneAffecte(@RequestBody PersonneAffecteDTO personneAffecte) {
+    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> createPersonneAffecte(@RequestBody PersonneAffecteDTO personneAffecte, @RequestParam Long projectId) {
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         try {
             PersonneAffecteDTO savedPersonneAffecte = personneAffecteService.savePersonneAffecte(personneAffecte);
@@ -76,8 +81,9 @@ public class PersonneAffecteController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping("/importer")
-    public ResponseEntity<ApiResponse<List<PersonneAffecteDTO>>> createPersonneAffectes(@RequestBody List<PersonneAffecteDTO> personneAffectes) {
+    public ResponseEntity<ApiResponse<List<PersonneAffecteDTO>>> createPersonneAffectes(@RequestBody List<PersonneAffecteDTO> personneAffectes, @RequestParam Long projectId) {
         try {
             List<PersonneAffecteDTO> savedPersonneAffectes = personneAffecteService.savePersonneAffectes(personneAffectes);
             ApiResponse<List<PersonneAffecteDTO>> response = new ApiResponse<>(HttpStatus.CREATED.value(), "Personnes affectées importées avec succès", savedPersonneAffectes);
@@ -90,9 +96,10 @@ public class PersonneAffecteController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
 
-    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> updatePersonneAffecte(@PathVariable Long id, @RequestBody PersonneAffecteDTO personneAffecteDetails) {
+    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> updatePersonneAffecte(@PathVariable Long id, @RequestBody PersonneAffecteDTO personneAffecteDetails, @RequestParam Long projectId) {
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         try {
             PersonneAffecteDTO updatedPersonneAffecte = personneAffecteService.updatePersonneAffecte(id, personneAffecteDetails);
@@ -112,8 +119,9 @@ public class PersonneAffecteController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePersonneAffecte(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePersonneAffecte(@PathVariable Long id, @RequestParam Long projectId) {
         personneAffecteService.deletePersonneAffecte(id);
         return ResponseEntity.noContent().build();
     }
@@ -122,8 +130,9 @@ public class PersonneAffecteController {
     @Autowired
     private ExcelService excelService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_IMPORTER')")
     @PostMapping("/import-personnes-affectees")
-    public ResponseEntity<String> importPersonneAffecteData(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> importPersonneAffecteData(@RequestParam("file") MultipartFile file, @RequestParam Long projectId) {
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a file!");
         }
@@ -137,9 +146,10 @@ public class PersonneAffecteController {
 
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("addImage/{id}")
 
-    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> addImageToPap(@PathVariable Long id, @RequestBody String url) {
+    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> addImageToPap(@PathVariable Long id, @RequestBody String url, @RequestParam Long projectId) {
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         try {
             PersonneAffecteDTO updatedPersonneAffecte = personneAffecteService.addImageToPap(id, url);
@@ -158,8 +168,9 @@ public class PersonneAffecteController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("addSignature/{id}")
-    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> addSignature(@PathVariable Long id, @RequestBody String url) {
+    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> addSignature(@PathVariable Long id, @RequestBody String url, @RequestParam Long projectId) {
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         try {
             PersonneAffecteDTO updatedPersonneAffecte = personneAffecteService.addSignatureToPap(id, url);
@@ -178,8 +189,9 @@ public class PersonneAffecteController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("dedommagerPap/{id}")
-    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> dedommagerPap(@PathVariable Long id, @RequestBody String url) {
+    public ResponseEntity<AApiResponse<PersonneAffecteDTO>> dedommagerPap(@PathVariable Long id, @RequestBody String url, @RequestParam Long projectId) {
         AApiResponse<PersonneAffecteDTO> response = new AApiResponse<>();
         try {
             PersonneAffecteDTO updatedPersonneAffecte = personneAffecteService.dedommagerPap(id, url);

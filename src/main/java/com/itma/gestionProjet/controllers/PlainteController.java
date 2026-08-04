@@ -25,6 +25,7 @@ public class PlainteController {
     @Autowired
     private PlainteService plainteService;
 
+    @PreAuthorize("@permissionChecker.has(#plainteRequest.projectId, 'PLAINTES_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<PlainteDto>> createPlainte(@RequestBody PlainteRequest plainteRequest) {
         PlainteDto createdPlainte = plainteService.createPlainte(plainteRequest);
@@ -35,8 +36,9 @@ public class PlainteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_CREER')")
     @PostMapping("/importer")
-    public ResponseEntity<AApiResponse<Map<String, Object>>> createPlaintes(@RequestBody List<PlainteRequest> plainteRequests) {
+    public ResponseEntity<AApiResponse<Map<String, Object>>> createPlaintes(@RequestBody List<PlainteRequest> plainteRequests, @RequestParam Long projectId) {
         List<PlainteDto> plaintesValides = new ArrayList<>();
         List<PlainteInvalidDto> plaintesInvalides = new ArrayList<>();
 
@@ -70,6 +72,7 @@ public class PlainteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_CREER')")
     @PostMapping("/import")
     public ResponseEntity<AApiResponse<PlainteImportResultDto>> importerExcel(
             @RequestParam("file") MultipartFile file,
@@ -87,6 +90,7 @@ public class PlainteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<PlainteDto>> getAllPlaintes(
             @RequestParam(required = false) Long projectId,
@@ -106,8 +110,9 @@ public class PlainteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<PlainteDto>> getPlainteById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<PlainteDto>> getPlainteById(@PathVariable Long id, @RequestParam Long projectId) {
         PlainteDto plainte = plainteService.getPlainteById(id);
         AApiResponse<PlainteDto> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -116,6 +121,7 @@ public class PlainteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#plainteRequest.projectId, 'PLAINTES_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<PlainteDto>> updatePlainte(@PathVariable Long id, @RequestBody PlainteRequest plainteRequest) {
         PlainteDto updatedPlainte = plainteService.updatePlainte(id, plainteRequest);
@@ -126,8 +132,9 @@ public class PlainteController {
         return ResponseEntity.ok().body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deletePlainte(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deletePlainte(@PathVariable Long id, @RequestParam Long projectId) {
         plainteService.deletePlainte(id);
         AApiResponse<Void> response = new AApiResponse<>();
         response.setResponseCode(200);
@@ -168,15 +175,18 @@ public class PlainteController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_VOIR')")
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<PlainteDto>> getPlainteByCodePap(
             @RequestParam String codePap,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam Long projectId) {
         AApiResponse<PlainteDto> response = plainteService.getPlainteByCodePap(codePap, page, size);
         return ResponseEntity.status(response.getResponseCode()).body(response);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PLAINTES_VOIR')")
     @GetMapping("/search")
     public ResponseEntity<AApiResponse<PlainteDto>> searchGlobal(
             @RequestParam String searchTerm,

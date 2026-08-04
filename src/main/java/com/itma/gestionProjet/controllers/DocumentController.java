@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class DocumentController {
     @Autowired
     private DocumentService documentService;
 
+    @PreAuthorize("@permissionChecker.has(#documentRequest.projectId, 'DOCUMENTS_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<DocumentDTO>> createDocument(@RequestBody DocumentRequest documentRequest) {
         AApiResponse<DocumentDTO> response = new AApiResponse<>();
@@ -38,6 +40,7 @@ public class DocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#documentRequest.projectId, 'DOCUMENTS_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<DocumentDTO>> updateDocument(
             @PathVariable Long id,
@@ -61,8 +64,9 @@ public class DocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DOCUMENTS_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteDocument(@PathVariable Long id, @RequestParam Long projectId) {
         AApiResponse<Void> response = new AApiResponse<>();
         try {
             documentService.deleteDocument(id);
@@ -80,8 +84,9 @@ public class DocumentController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DOCUMENTS_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<DocumentDTO>> getDocumentById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<DocumentDTO>> getDocumentById(@PathVariable Long id, @RequestParam Long projectId) {
         AApiResponse<DocumentDTO> response = new AApiResponse<>();
         try {
             DocumentDTO documentDTO = documentService.getDocumentById(id);
@@ -126,6 +131,7 @@ public class DocumentController {
 
      */
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DOCUMENTS_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<DocumentDTO>> getAllDocuments(
             @RequestParam(required = false) Long projectId,

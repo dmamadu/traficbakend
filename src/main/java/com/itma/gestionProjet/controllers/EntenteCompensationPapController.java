@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -33,6 +34,7 @@ public class EntenteCompensationPapController {
         return ResponseEntity.ok(ententes);
     }
      */
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<EntenteCompensationPapDto>> getAllEntentes(
             @RequestParam(required = false) Long projectId,
@@ -64,6 +66,7 @@ public class EntenteCompensationPapController {
     }
 
      */
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'ENTENTE_COMPENSATION_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<EntenteCompensationPapDto>> createEntente(@RequestBody EntenteCompensationPapRequest request) {
         try {
@@ -99,6 +102,7 @@ public class EntenteCompensationPapController {
     }
 
      */
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'ENTENTE_COMPENSATION_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<EntenteCompensationPapDto>> updateEntente(
             @PathVariable Long id,
@@ -121,8 +125,9 @@ public class EntenteCompensationPapController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteEntente(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteEntente(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             ententeService.deleteEntente(id);
             AApiResponse<Void> response = new AApiResponse<>();
@@ -144,8 +149,9 @@ public class EntenteCompensationPapController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/byCodePap")
-    public ResponseEntity<AApiResponse> getEntenteByCodePap(@RequestParam String codePap) {
+    public ResponseEntity<AApiResponse> getEntenteByCodePap(@RequestParam String codePap, @RequestParam Long projectId) {
         try {
             EntenteCompensationPapDto entente = ententeService.getEntenteByCodePap(codePap);
             List<EntenteCompensationPapDto> data = Collections.singletonList(entente);
@@ -172,6 +178,7 @@ public class EntenteCompensationPapController {
     }
 
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/search")
     public AApiResponse<EntenteCompensationPapDto> searchGlobal(
             @RequestParam String searchTerm,

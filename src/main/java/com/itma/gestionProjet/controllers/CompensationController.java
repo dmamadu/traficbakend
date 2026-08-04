@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,10 +24,12 @@ public class CompensationController {
         this.service = service;
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping
     public ResponseEntity<AApiResponse<CompensationDTO>> getAllCompensations(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long projectId
     ) {
         try {
             Pageable pageable = PageRequest.of(page, size);
@@ -47,8 +50,9 @@ public class CompensationController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_VOIR')")
     @GetMapping("/{id}")
-    public ResponseEntity<AApiResponse<CompensationDTO>> getCompensationById(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<CompensationDTO>> getCompensationById(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             CompensationDTO dto = service.getCompensationById(id);
 
@@ -65,6 +69,7 @@ public class CompensationController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'ENTENTE_COMPENSATION_CREER')")
     @PostMapping
     public ResponseEntity<AApiResponse<CompensationDTO>> createCompensation(@RequestBody CompensationRequest request) {
         try {
@@ -83,6 +88,7 @@ public class CompensationController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#request.projectId, 'ENTENTE_COMPENSATION_MODIFIER')")
     @PutMapping("/{id}")
     public ResponseEntity<AApiResponse<CompensationDTO>> updateCompensation(
             @PathVariable Long id,
@@ -104,8 +110,9 @@ public class CompensationController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'ENTENTE_COMPENSATION_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<AApiResponse<Void>> deleteCompensation(@PathVariable Long id) {
+    public ResponseEntity<AApiResponse<Void>> deleteCompensation(@PathVariable Long id, @RequestParam Long projectId) {
         try {
             service.deleteCompensation(id);
 

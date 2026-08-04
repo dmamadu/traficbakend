@@ -62,6 +62,12 @@ public class DatabasePapEconomiqueServiceImpl implements DatabasePapEconomiqueSe
     }
 
     @Override
+    public Page<DatabasePapEconomiqueDto> getPapEconomiquesByProjectId(Long projectId, int page, int size) {
+        Page<DatabasePapEconomique> papEconomiques = repository.findByProjectId(projectId, PageRequest.of(page, size));
+        return papEconomiques.map(entity -> modelMapper.map(entity, DatabasePapEconomiqueDto.class));
+    }
+
+    @Override
     public DatabasePapEconomiqueDto getPapEconomiqueById(Long id) {
         DatabasePapEconomique papEconomique = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PapEconomique not found"));

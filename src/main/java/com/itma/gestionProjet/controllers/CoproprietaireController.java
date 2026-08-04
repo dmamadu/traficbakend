@@ -8,6 +8,7 @@ import com.itma.gestionProjet.services.CoproprietaireService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -19,21 +20,25 @@ public class CoproprietaireController {
     @Autowired
     private CoproprietaireService coproprietaireService;
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping
     public AApiResponse<Coproprietaire> getAllCoproprietaires(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int max) {
+            @RequestParam(defaultValue = "10") int max,
+            @RequestParam(required = false) Long projectId) {
         return coproprietaireService.getAllCoproprietaires(offset, max);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/{id}")
-    public AApiResponse<Coproprietaire> getCoproprietaireById(@PathVariable Long id) {
+    public AApiResponse<Coproprietaire> getCoproprietaireById(@PathVariable Long id, @RequestParam Long projectId) {
         return coproprietaireService.getCoproprietaireById(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_CREER')")
     @PostMapping
 
-    public ResponseEntity<AApiResponse<List<CoproprietaireRequest>>> createTache(@RequestBody List<CoproprietaireRequest> coproprietaireRequests) {
+    public ResponseEntity<AApiResponse<List<CoproprietaireRequest>>> createTache(@RequestBody List<CoproprietaireRequest> coproprietaireRequests, @RequestParam Long projectId) {
         AApiResponse<List<CoproprietaireRequest>> response = new AApiResponse<>();
         try {
             List<CoproprietaireRequest> savedCoproprietaires = coproprietaireService.createCoproprietaire(coproprietaireRequests);
@@ -52,20 +57,24 @@ public class CoproprietaireController {
         }
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_MODIFIER')")
     @PutMapping("/{id}")
-    public AApiResponse<Coproprietaire> updateCoproprietaire(@PathVariable Long id, @RequestBody Coproprietaire coproprietaire) {
+    public AApiResponse<Coproprietaire> updateCoproprietaire(@PathVariable Long id, @RequestBody Coproprietaire coproprietaire, @RequestParam Long projectId) {
         return coproprietaireService.updateCoproprietaire(id, coproprietaire);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_SUPPRIMER')")
     @DeleteMapping("/{id}")
-    public AApiResponse<Void> deleteCoproprietaire(@PathVariable Long id) {
+    public AApiResponse<Void> deleteCoproprietaire(@PathVariable Long id, @RequestParam Long projectId) {
         return coproprietaireService.deleteCoproprietaire(id);
     }
 
+    @PreAuthorize("@permissionChecker.has(#projectId, 'PAP_VOIR')")
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<List<Coproprietaire>>> getCoproprietairesByCodePap(@RequestParam String codePap,
                                                                                           @RequestParam(defaultValue = "0") int offset,
-                                                                                          @RequestParam(defaultValue = "100") int max) {
+                                                                                          @RequestParam(defaultValue = "100") int max,
+                                                                                          @RequestParam Long projectId) {
         AApiResponse<List<Coproprietaire>> response = coproprietaireService.getCoproprietairesByCodePap(codePap, offset, max);
 
         if (response.getData() == null) {
