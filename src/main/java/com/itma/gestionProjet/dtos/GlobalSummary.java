@@ -9,5 +9,7 @@ public class GlobalSummary {
     private long totalVulnerables;
     private double percentHommesGlobal;
     private double percentFemmesGlobal;
+    private long totalAutre;
+    private double percentAutreGlobal;
     private double totalCompensations;
 }

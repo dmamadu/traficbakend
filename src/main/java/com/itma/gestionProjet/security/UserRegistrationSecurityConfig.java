@@ -54,6 +54,13 @@ public class UserRegistrationSecurityConfig {
     private static final String[] PUBLIC_POST_URLs = {
             "/complaints"
     };
+
+    // Consultation publique des fichiers uploadés (photos/pièces jointes affichées via <img src>, qui
+    // n'envoie jamais le header Authorization) — seul le téléchargement (GET) est public ; l'upload
+    // (POST) et la suppression (DELETE) restent authentifiés.
+    private static final String[] PUBLIC_GET_URLs = {
+            "/fileMinios/download/**"
+    };
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -108,7 +115,8 @@ public class UserRegistrationSecurityConfig {
                 .authorizeHttpRequests()
                 .requestMatchers(UN_SECURED_URLs).permitAll()
                 .requestMatchers(PUBLIC_USER_URLs).permitAll()
-                .requestMatchers(HttpMethod.POST, PUBLIC_POST_URLs).permitAll().and()
+                .requestMatchers(HttpMethod.POST, PUBLIC_POST_URLs).permitAll()
+                .requestMatchers(HttpMethod.GET, PUBLIC_GET_URLs).permitAll().and()
                 .authorizeHttpRequests().requestMatchers(SECURED_URLs)
                 .hasAuthority("Super Admin").anyRequest()
                 .authenticated()

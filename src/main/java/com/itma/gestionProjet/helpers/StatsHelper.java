@@ -104,12 +104,15 @@ public class StatsHelper {
         long totalPersonnes = pa.getTotal() + ag.getTotal() + hab.getTotal();
         long totalHommes    = pa.getHommes() + ag.getHommes() + hab.getHommes();
         long totalFemmes    = pa.getFemmes() + ag.getFemmes() + hab.getFemmes();
+        long totalAutre     = pa.getAutre() + ag.getAutre() + hab.getAutre();
 
         GlobalSummary summary = new GlobalSummary();
         summary.setTotalPersonnesAffectees(totalPersonnes);
         summary.setTotalVulnerables(pa.getTotalVulnerables() + ag.getTotalVulnerables() + hab.getTotalVulnerables());
         summary.setPercentHommesGlobal(totalPersonnes > 0 ? (totalHommes * 100.0 / totalPersonnes) : 0);
         summary.setPercentFemmesGlobal(totalPersonnes > 0 ? (totalFemmes * 100.0 / totalPersonnes) : 0);
+        summary.setTotalAutre(totalAutre);
+        summary.setPercentAutreGlobal(totalPersonnes > 0 ? (totalAutre * 100.0 / totalPersonnes) : 0);
         summary.setTotalCompensations(pa.getTotalPerte() + ag.getTotalPerte() + hab.getTotalPerte());
         return summary;
     }
