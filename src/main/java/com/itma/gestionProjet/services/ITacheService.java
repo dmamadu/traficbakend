@@ -12,13 +12,13 @@ import java.util.List;
 
 public interface ITacheService {
     Tache createTache(Tache tache,Long projectId);
-    TacheDTO updateTache(Long id, Tache tache);
-    void deleteTache(Long id);
+    TacheDTO updateTache(Long id, Tache tache, Long projectId);
+    void deleteTache(Long id, Long projectId);
     List<Tache> getAllTaches();
-    Tache getTacheById(Long id);
+    Tache getTacheById(Long id, Long projectId);
 
-    Page<TacheDTO> getAllTaches(PageRequest pageRequest);
+    Page<TacheDTO> getAllTaches(PageRequest pageRequest, String search, String statut);
 
-    Page<TacheDTO> getTachesByProjectId(Long projectId, PageRequest pageRequest);
+    Page<TacheDTO> getTachesByProjectId(Long projectId, PageRequest pageRequest, String search, String statut);
 
 }

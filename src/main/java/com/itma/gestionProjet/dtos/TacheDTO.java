@@ -17,6 +17,7 @@ public class TacheDTO {
     private Date dateDebut;
     private Date dateFin;
     private String statut;
+    private Integer progression;
     private Set<ConsultantResponse> utilisateurs    ;
     private String observation;
 }

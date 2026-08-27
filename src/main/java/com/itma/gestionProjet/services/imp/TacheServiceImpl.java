@@ -7,8 +7,10 @@ import com.itma.gestionProjet.dtos.UserDTO;
 import com.itma.gestionProjet.entities.Project;
 import com.itma.gestionProjet.entities.Tache;
 import com.itma.gestionProjet.entities.User;
+import com.itma.gestionProjet.exceptions.TacheNotFoundException;
 import com.itma.gestionProjet.repositories.ProjectRepository;
 import com.itma.gestionProjet.repositories.TacheRepository;
+import com.itma.gestionProjet.repositories.TacheSpecifications;
 import com.itma.gestionProjet.services.ITacheService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -49,10 +52,26 @@ public class TacheServiceImpl implements ITacheService {
         if (tache == null) {
             throw new IllegalArgumentException("La tâche ne peut pas être nulle");
         }
-            Project project = projectRepository.findById(projectId)
-                    .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + projectId));
-            tache.setProject(project);
+        validateProgression(tache.getProgression());
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + projectId));
+        tache.setProject(project);
         return tacheRepository.save(tache);
+    }
+
+    private void validateProgression(Integer progression) {
+        if (progression != null && (progression < 0 || progression > 100)) {
+            throw new IllegalArgumentException("La progression doit être comprise entre 0 et 100");
+        }
+    }
+
+    private Tache findTacheInProject(Long id, Long projectId) {
+        Tache tache = tacheRepository.findById(id)
+                .orElseThrow(() -> new TacheNotFoundException("Tâche non trouvée avec l'ID: " + id));
+        if (tache.getProject() == null || !tache.getProject().getId().equals(projectId)) {
+            throw new TacheNotFoundException("Tâche non trouvée avec l'ID: " + id);
+        }
+        return tache;
     }
 
     /*
@@ -66,14 +85,23 @@ public class TacheServiceImpl implements ITacheService {
 
     @Override
     @Transactional
-    public TacheDTO updateTache(Long id, Tache updatedTache) {
-        Tache existingTache = tacheRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + id));
+    public TacheDTO updateTache(Long id, Tache updatedTache, Long projectId) {
+        validateProgression(updatedTache.getProgression());
+        Tache existingTache = findTacheInProject(id, projectId);
         existingTache.setLibelle(updatedTache.getLibelle());
         existingTache.setDescription(updatedTache.getDescription());
         existingTache.setDateDebut(updatedTache.getDateDebut());
         existingTache.setDateFin(updatedTache.getDateFin());
-        existingTache.setStatut(updatedTache.getStatut());
+        existingTache.setObservation(updatedTache.getObservation());
+        if (updatedTache.getProgression() != null) {
+            existingTache.setProgression(updatedTache.getProgression());
+        }
+        // Une tâche à 100% est considérée comme complétée, quel que soit le statut envoyé
+        existingTache.setStatut(
+                existingTache.getProgression() != null && existingTache.getProgression() == 100
+                        ? "complete"
+                        : updatedTache.getStatut()
+        );
         if (updatedTache.getUtilisateurs() != null) {
             existingTache.setUtilisateurs(updatedTache.getUtilisateurs());
         }
@@ -81,8 +109,9 @@ public class TacheServiceImpl implements ITacheService {
     }
 
     @Override
-    public void deleteTache(Long id) {
-        tacheRepository.deleteById(id);
+    public void deleteTache(Long id, Long projectId) {
+        Tache tache = findTacheInProject(id, projectId);
+        tacheRepository.delete(tache);
     }
 
     @Override
@@ -91,14 +120,15 @@ public class TacheServiceImpl implements ITacheService {
     }
 
     @Override
-    public Tache getTacheById(Long id) {
-        Optional<Tache> tache = tacheRepository.findById(id);
-        return tache.orElse(null);
+    public Tache getTacheById(Long id, Long projectId) {
+        return findTacheInProject(id, projectId);
     }
 
     @Override
-    public Page<TacheDTO> getAllTaches(PageRequest pageRequest) {
-        Page<Tache> tachePage = tacheRepository.findAll(pageRequest);
+    public Page<TacheDTO> getAllTaches(PageRequest pageRequest, String search, String statut) {
+        Specification<Tache> spec = Specification.where(TacheSpecifications.matchesSearch(search))
+                .and(TacheSpecifications.hasStatut(statut));
+        Page<Tache> tachePage = tacheRepository.findAll(spec, pageRequest);
         List<TacheDTO> tacheDTOs = tachePage.stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList());
@@ -107,8 +137,11 @@ public class TacheServiceImpl implements ITacheService {
 
 
     @Override
-    public Page<TacheDTO> getTachesByProjectId(Long projectId,PageRequest pageRequest) {
-        Page<Tache> tachePage = tacheRepository.findByProjectId(projectId,pageRequest);
+    public Page<TacheDTO> getTachesByProjectId(Long projectId, PageRequest pageRequest, String search, String statut) {
+        Specification<Tache> spec = Specification.where(TacheSpecifications.hasProjectId(projectId))
+                .and(TacheSpecifications.matchesSearch(search))
+                .and(TacheSpecifications.hasStatut(statut));
+        Page<Tache> tachePage = tacheRepository.findAll(spec, pageRequest);
         List<TacheDTO> tacheDTOs = tachePage.stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList());
@@ -123,6 +156,7 @@ public class TacheServiceImpl implements ITacheService {
         dto.setDateDebut(tache.getDateDebut());
         dto.setDateFin(tache.getDateFin());
         dto.setStatut(tache.getStatut());
+        dto.setProgression(tache.getProgression());
         Set<ConsultantResponse> consultantDTOs = tache.getUtilisateurs().stream()
                 .map(this::convertConsultantToDto)
                 .collect(Collectors.toSet());
@@ -144,8 +178,8 @@ public class TacheServiceImpl implements ITacheService {
 
 
 
-    public Page<Tache> getTachesByUserId(Long userId, Pageable pageable) {
-        return tacheRepository.findTachesByUserId(userId, pageable);
+    public Page<Tache> getTachesByUserId(Long userId, Long projectId, Pageable pageable) {
+        return tacheRepository.findTachesByUserIdAndProjectId(userId, projectId, pageable);
     }
 
     public TacheResponseDTO mapToDTO(Tache tache) {
@@ -156,6 +190,7 @@ public class TacheServiceImpl implements ITacheService {
         dto.setDateDebut(tache.getDateDebut());
         dto.setDateFin(tache.getDateFin());
         dto.setStatut(tache.getStatut());
+        dto.setProgression(tache.getProgression());
         return dto;
     }
 

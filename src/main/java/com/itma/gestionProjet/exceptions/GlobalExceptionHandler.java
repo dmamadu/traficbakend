@@ -229,6 +229,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(TacheNotFoundException.class)
+    public ResponseEntity<AApiResponse<String>> handleTacheNotFoundException(TacheNotFoundException ex) {
+        AApiResponse<String> response = new AApiResponse<>();
+        response.setResponseCode(HttpStatus.NOT_FOUND.value());
+        response.setMessage(ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
     // Gestion des exceptions EntityNotFoundException
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<AApiResponse<String>> handleEntityNotFoundException(EntityNotFoundException ex) {

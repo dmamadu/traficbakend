@@ -30,6 +30,8 @@ public class Tache {
 
     private String statut;
 
+    private Integer progression = 0;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "tache_user",
