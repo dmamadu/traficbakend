@@ -6,6 +6,7 @@ import com.itma.gestionProjet.dtos.TacheResponseDTO;
 import com.itma.gestionProjet.dtos.UserDTO;
 import com.itma.gestionProjet.entities.Project;
 import com.itma.gestionProjet.entities.Tache;
+import com.itma.gestionProjet.entities.TacheStatut;
 import com.itma.gestionProjet.entities.User;
 import com.itma.gestionProjet.exceptions.TacheNotFoundException;
 import com.itma.gestionProjet.repositories.ProjectRepository;
@@ -53,6 +54,7 @@ public class TacheServiceImpl implements ITacheService {
             throw new IllegalArgumentException("La tâche ne peut pas être nulle");
         }
         validateProgression(tache.getProgression());
+        validateStatut(tache.getStatut());
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + projectId));
         tache.setProject(project);
@@ -62,6 +64,13 @@ public class TacheServiceImpl implements ITacheService {
     private void validateProgression(Integer progression) {
         if (progression != null && (progression < 0 || progression > 100)) {
             throw new IllegalArgumentException("La progression doit être comprise entre 0 et 100");
+        }
+    }
+
+    private void validateStatut(String statut) {
+        if (statut != null && !TacheStatut.isValid(statut)) {
+            throw new IllegalArgumentException(
+                    "Statut invalide : " + statut + ". Valeurs autorisées : " + TacheStatut.allowedValues());
         }
     }
 
@@ -87,6 +96,7 @@ public class TacheServiceImpl implements ITacheService {
     @Transactional
     public TacheDTO updateTache(Long id, Tache updatedTache, Long projectId) {
         validateProgression(updatedTache.getProgression());
+        validateStatut(updatedTache.getStatut());
         Tache existingTache = findTacheInProject(id, projectId);
         existingTache.setLibelle(updatedTache.getLibelle());
         existingTache.setDescription(updatedTache.getDescription());
