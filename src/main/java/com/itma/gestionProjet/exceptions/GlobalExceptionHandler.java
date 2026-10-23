@@ -110,6 +110,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
+    // Référentiels manquants à la création d'un utilisateur : message lisible plutôt qu'une 500
+    @ExceptionHandler({RoleNotFoundException.class, FonctionNotFoundException.class, CategorieNotFoundException.class})
+    public ResponseEntity<ErrorDetails> handleUserReferenceNotFoundException(RuntimeException exception, WebRequest webRequest){
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                HttpStatus.BAD_REQUEST
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ProjectAlreadyExistException.class)
     public ResponseEntity<ErrorDetails> handleProjectAlreadyExistException(ProjectAlreadyExistException exception, WebRequest webRequest){
         ErrorDetails errorDetails = new ErrorDetails(

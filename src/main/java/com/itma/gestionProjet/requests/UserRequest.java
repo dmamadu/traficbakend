@@ -22,8 +22,8 @@ public class UserRequest {
     @Email(message = "L'email doit être valide.")
     private String email;
 
-   // @NotBlank(message = "La localité ne peut pas être vide.")
-   // private String locality;
+    // Facultatif côté API : d'autres appelants (parties intéressées…) ne l'envoient pas
+    private String locality;
 
     @NotBlank(message = "Le contact ne peut pas être vide.")
     private String contact;

@@ -15,6 +15,8 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    // Recherche insensible à la casse : « Jean@… » et « jean@… » désignent le même compte
+    Optional<User> findFirstByEmailIgnoreCase(String email);
     Optional<User> findByContact(String contact);
 
 

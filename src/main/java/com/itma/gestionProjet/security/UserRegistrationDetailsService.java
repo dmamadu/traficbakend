@@ -24,7 +24,7 @@ public class UserRegistrationDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username)
+        User user = userRepository.findFirstByEmailIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + username));
         // La transaction reste ouverte pendant la construction de UserRegistrationDetails,
         // ce qui permet de charger user.getProjects() (LAZY) sans LazyInitializationException

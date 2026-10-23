@@ -126,8 +126,9 @@ public class UserController {
     @RequestMapping(path = "/createUser", method = RequestMethod.POST)
     @PreAuthorize("@permissionChecker.has('UTILISATEURS_CREER')")
     public  ApiResponse<User> createUser(@Valid @RequestBody UserRequest userRequest, final HttpServletRequest request) {
+        // saveUser envoie déjà l'e-mail d'identifiants. Plus d'e-mail de vérification : le compte
+        // est créé actif, et son lien (/#/users/verifyEmail) ne correspond à aucune page du front.
         User user = userService.saveUser(userRequest);
-        publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
         return   new ApiResponse<>(HttpStatus.OK.value(), "User cree avec succés",user);
     }
 
@@ -166,10 +167,11 @@ public class UserController {
     @PostMapping("login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDTO loginDto){
         Authentication authentication;
+        String email = loginDto.getEmail() == null ? null : loginDto.getEmail().trim();
         try {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginDto.getEmail(),
+                            email,
                             loginDto.getPassword()));
         } catch (AuthenticationException e) {
             auditRepository.save(new AuditEntry(
@@ -184,7 +186,7 @@ public class UserController {
 
         if (authentication.isAuthenticated()){
             String token = jwtGenerator.generateToken(authentication);
-            Optional<User> user=userRepository.findByEmail(loginDto.getEmail());
+            Optional<User> user=userRepository.findFirstByEmailIgnoreCase(email);
                 User user1 = user.get();
                 UserDTO userDTO = userService.convertEntityToDto(user1);
                 auditRepository.save(new AuditEntry(

@@ -29,6 +29,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if(StringUtils.hasText(token) && tokenGenerator.validateToken(token)  ) {
             String username = tokenGenerator.getUsernameFromJWT(token);
             UserDetails userDetails = userRegistrationDetailsServiceDetails.loadUserByUsername(username);
+            // Tant que le mot de passe par défaut n'a pas été changé, seul le changement de mot de passe
+            // est autorisé : sinon un simple rechargement de page côté front suffisait à l'éviter.
+            if (userDetails instanceof UserRegistrationDetails details
+                    && Boolean.TRUE.equals(details.getUser().getMustChangePassword())
+                    && !request.getServletPath().endsWith("/users/change-password")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"message\":\"Vous devez changer votre mot de passe avant de continuer.\",\"errorCode\":\"MUST_CHANGE_PASSWORD\"}");
+                return;
+            }
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null,
                     userDetails.getAuthorities());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

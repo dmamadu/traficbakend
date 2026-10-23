@@ -29,7 +29,8 @@ public class RegistrationCompleteEventListener  implements ApplicationListener<R
     private UserService userService;
     @Autowired
     private JavaMailSender mailSender;
-    private  User theUser;
+    // Pas de champ « utilisateur courant » : ce composant est un singleton partagé entre requêtes,
+    // un champ mutable mélangerait les destinataires de deux inscriptions simultanées.
     private final EmailService emailService;
 
     @Value("${app.front.url}")
@@ -39,20 +40,20 @@ public class RegistrationCompleteEventListener  implements ApplicationListener<R
     @Override
     public void onApplicationEvent(RegistrationCompleteEvent event) {
         String  verificationToken= UUID.randomUUID().toString();
-        theUser=event.getUser();
+        User user = event.getUser();
         String url=urlFront+"/#/users/verifyEmail?token="+verificationToken;
-        userService.saveUserVerificationToken(theUser,verificationToken);
+        userService.saveUserVerificationToken(user,verificationToken);
         try {
-            sendVerificationEmail(url);
+            sendVerificationEmail(url, user);
         } catch (MessagingException | UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
         log.info("Click the link to verify your registration : {}",url);
     }
-    public void sendVerificationEmail(String url) throws MessagingException, UnsupportedEncodingException {
+    public void sendVerificationEmail(String url, User user) throws MessagingException, UnsupportedEncodingException {
         String subject = "Email Verification";
         String senderName = "User Registration Portal Service";
-        String mailContent = "Bonjour " + theUser.getFirstname() +
+        String mailContent = "Bonjour " + user.getFirstname() +
                 "<br/>" +
                 "Nous avons bien reçu une demande de modification de votre mot de passe chez Solution Digitale.<br/>" +
                 "Pour réinitialiser votre mot de passe et finaliser cette opération, veuillez cliquer sur le lien ci-dessous pour confirmer votre email :<br/>" +
@@ -61,7 +62,7 @@ public class RegistrationCompleteEventListener  implements ApplicationListener<R
                 "Merci de votre confiance et à bientôt sur Solution Digitale.<br/>";
         MailRequestDto mailRequestDto = new MailRequestDto();
         mailRequestDto.setTemplate("verification_mail");
-        mailRequestDto.setToEmail(theUser.getEmail());
+        mailRequestDto.setToEmail(user.getEmail());
         mailRequestDto.setSubject(subject);
         mailRequestDto.setMessage(mailContent);
         emailService.sendMail(mailRequestDto);

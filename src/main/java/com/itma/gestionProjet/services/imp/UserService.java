@@ -86,8 +86,10 @@ public class UserService  implements IUserService {
     @Override
     @Transactional
     public User saveUser(UserRequest p) {
+        // Email normalisé (espaces, casse) pour que la connexion ne dépende pas de la saisie
+        String email = p.getEmail().trim().toLowerCase();
         // Vérification de l'unicité de l'email et du contact
-        Optional<User> optionalUser = userRepository.findByEmail(p.getEmail());
+        Optional<User> optionalUser = userRepository.findFirstByEmailIgnoreCase(email);
         if (optionalUser.isPresent()) {
             throw new EmailAlreadyExistsException("Email déjà existant!");
         }
@@ -97,11 +99,11 @@ public class UserService  implements IUserService {
         }
         // Création de l'utilisateur
         User newUser = new User();
-        newUser.setEmail(p.getEmail());
+        newUser.setEmail(email);
         newUser.setLastname(p.getLastname());
         newUser.setFirstname(p.getFirstname());
         newUser.setContact(p.getContact());
-      //  newUser.setLocality(p.getLocality());
+        newUser.setLocality(p.getLocality());
         newUser.setImageUrl(p.getImageUrl());
         newUser.setEnabled(true);
         newUser.setMustChangePassword(true);
@@ -687,22 +689,23 @@ public class UserService  implements IUserService {
         User user = optionalUser.get();  // Get the User object safely after the check
 
         // Check if the new email is already in use, but skip if the email is the same as the current one
-        if (!user.getEmail().equals(p.getEmail())) {
+        String email = p.getEmail().trim().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(email)) {
             // Look for a user with the new email
-            Optional<User> optionalNewEmailUser = userRepository.findByEmail(p.getEmail());
+            Optional<User> optionalNewEmailUser = userRepository.findFirstByEmailIgnoreCase(email);
             if (optionalNewEmailUser.isPresent()) {
                 // If email exists, throw an exception
                 throw new EmailAlreadyExistsException("Email déjà existant!");
             }
             // Set new email if no conflicts
-            user.setEmail(p.getEmail());
+            user.setEmail(email);
         }
 
         // Update other fields without the need for 'orElseThrow' since we're directly modifying the current user
         user.setLastname(p.getLastname());
         user.setFirstname(p.getFirstname());
         user.setContact(p.getContact());
-      //  user.setLocality(p.getLocality());
+        if (p.getLocality() != null) user.setLocality(p.getLocality());
         user.setImageUrl(p.getImageUrl());
 
         // Role update (check if the role exists)
