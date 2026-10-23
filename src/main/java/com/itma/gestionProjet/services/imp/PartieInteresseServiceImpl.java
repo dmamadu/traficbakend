@@ -176,7 +176,10 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
         newUser.setLocality(contact.getAdresseContactPrincipal());
         newUser.setSexe(contact.getSexeContactPrincipal());
         newUser.setEnabled(true);
-        newUser.setPassword(bCryptPasswordEncoder.encode("P@sser123"));
+        // Même mot de passe par défaut que les autres comptes (celui qu'annonce le dialogue de
+        // première connexion), à changer obligatoirement à la première connexion
+        newUser.setPassword(bCryptPasswordEncoder.encode("Passer@123"));
+        newUser.setMustChangePassword(true);
 
         // Récupération rôle et catégorie avec vérification
 
@@ -259,7 +262,8 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
                     user.setLocality(contactDTO.getAdresseContactPrincipal());
                     user.setSexe(contactDTO.getSexeContactPrincipal());
                     user.setEnabled(true);  // Activer le contact
-                    user.setPassword(bCryptPasswordEncoder.encode("P@sser123")); // Nouveau mot de passe par défaut
+                    // Mot de passe conservé : le réinitialiser ici effaçait celui choisi par le contact
+                    // à chaque modification de la partie intéressée
 
                     // Mise à jour des rôles
                     Role role = roleRepository.findRoleByName("Representant principal");
@@ -280,6 +284,9 @@ public class PartieInteresseServiceImpl implements PartieInteresseService {
                     user.setLocality(contactDTO.getAdresseContactPrincipal());
                     user.setSexe(contactDTO.getSexeContactPrincipal());
                     user.setEnabled(true);
+                    // Sans mot de passe, ce contact ne pouvait jamais se connecter
+                    user.setPassword(bCryptPasswordEncoder.encode("Passer@123"));
+                    user.setMustChangePassword(true);
                     Role role = roleRepository.findRoleByName("Representant principal");
                     List<Role> roles = new ArrayList<>();
                     roles.add(role);
