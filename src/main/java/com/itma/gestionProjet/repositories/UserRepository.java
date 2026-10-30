@@ -31,6 +31,31 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "DELETE FROM user_project WHERE user_id = :userId", nativeQuery = true)
     void deleteUserAssociations(@Param("userId") Long userId);
 
+    // Lignes qui référencent l'utilisateur et bloquent sa suppression (clés étrangères)
+    @Modifying
+    @Query(value = "DELETE FROM user_role WHERE user_id = :userId", nativeQuery = true)
+    void deleteUserRoles(@Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM tache_user WHERE user_id = :userId", nativeQuery = true)
+    void deleteUserTaches(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM UserProjectRole r WHERE r.user.id = :userId")
+    void deleteUserProjectRoles(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM VerificationToken t WHERE t.user.id = :userId")
+    void deleteUserVerificationTokens(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM PasswordResetToken t WHERE t.user.id = :userId")
+    void deleteUserPasswordResetTokens(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM Image i WHERE i.user.id = :userId")
+    void deleteUserImages(@Param("userId") Long userId);
+
     boolean existsByEmail(String email);
 
     @Query("SELECT u FROM User u JOIN u.projects p WHERE p.id = :projectId")

@@ -37,7 +37,8 @@ public class User {
     private Categorie categorie;
 
     // Relation ManyToMany avec Role
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    // Pas de REMOVE : supprimer un utilisateur ne doit pas supprimer les rôles partagés
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),

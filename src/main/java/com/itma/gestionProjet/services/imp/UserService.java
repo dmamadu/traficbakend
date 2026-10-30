@@ -448,6 +448,12 @@ public class UserService  implements IUserService {
 
         // Remove the user's associations in user_project
         userRepository.deleteUserAssociations(id);
+        userRepository.deleteUserRoles(id);
+        userRepository.deleteUserTaches(id);
+        userRepository.deleteUserProjectRoles(id);
+        userRepository.deleteUserVerificationTokens(id);
+        userRepository.deleteUserPasswordResetTokens(id);
+        userRepository.deleteUserImages(id);
 /*
         // Remove the user's associations with roles and projects
         if (user.getImage() != null) {
@@ -468,8 +474,9 @@ public class UserService  implements IUserService {
                 LocalDateTime.now()
         ));
 
-        // Delete the user
-        userRepository.deleteById((id));
+        // Delete the user (les rôles ont déjà été détachés en base)
+        user.getRoles().clear();
+        userRepository.delete(user);
     }
 
     @Override
