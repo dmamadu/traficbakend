@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -165,7 +166,7 @@ public class UserController {
         }
     }
     @PostMapping("login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginDTO loginDto){
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDto){
         Authentication authentication;
         String email = loginDto.getEmail() == null ? null : loginDto.getEmail().trim();
         try {
@@ -180,7 +181,13 @@ public class UserController {
                     loginDto.getEmail(),
                     LocalDateTime.now()
             ));
-            throw e;
+            // Mauvais identifiants : 401 (et non 500 via le gestionnaire RuntimeException).
+            // Traité ici plutôt que dans GlobalExceptionHandler : UsernameNotFoundException est aussi
+            // levée par d'autres routes, et une 401 y déconnecterait l'utilisateur côté front.
+            String message = (e instanceof DisabledException)
+                    ? "Ce compte n'est pas activé."
+                    : "Email ou mot de passe incorrect.";
+            return loginFailure(message);
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -204,8 +211,15 @@ public class UserController {
                     loginDto.getEmail(),
                     LocalDateTime.now()
             ));
-            throw  new UsernameNotFoundException("Invalid credentials");
+            return loginFailure("Email ou mot de passe incorrect.");
         }
+    }
+
+    private ResponseEntity<AApiResponse<String>> loginFailure(String message) {
+        AApiResponse<String> body = new AApiResponse<>();
+        body.setResponseCode(HttpStatus.UNAUTHORIZED.value());
+        body.setMessage(message);
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
 
     }
 
@@ -294,16 +308,20 @@ public class UserController {
     }
 
     @GetMapping("/verifyEmail")
-    public String verifyEmail(@RequestParam("token") String token){
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token){
         VerificationToken theToken = tokenRepository.findByToken(token);
-        if (theToken.getUser().getEnabled()){
-            return "This account has already been verified, please, login.";
+        // Jeton inconnu (ou sans utilisateur) : 400 au lieu d'une NullPointerException (500)
+        if (theToken == null || theToken.getUser() == null) {
+            return ResponseEntity.badRequest().body("Invalid verification token");
+        }
+        if (Boolean.TRUE.equals(theToken.getUser().getEnabled())){
+            return ResponseEntity.ok("This account has already been verified, please, login.");
         }
         String verificationResult = userService.validateToken(token);
         if (verificationResult.equalsIgnoreCase("valid")){
-            return "Compte activeted successfully. Now you can login to your account";
+            return ResponseEntity.ok("Compte activeted successfully. Now you can login to your account");
         }
-        return "Invalid verification token";
+        return ResponseEntity.badRequest().body(verificationResult);
     }
 
 
