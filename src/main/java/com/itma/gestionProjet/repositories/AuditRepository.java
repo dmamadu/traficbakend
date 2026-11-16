@@ -19,4 +19,9 @@ public interface AuditRepository extends JpaRepository<AuditEntry, Long> {
     Page<AuditEntry> search(@Param("typeAction") String typeAction,
                              @Param("utilisateur") String utilisateur,
                              Pageable pageable);
+
+    // Historique des connexions d'un utilisateur (page Profil > Sécurité)
+    Page<AuditEntry> findByUtilisateurIgnoreCaseAndTypeActionInOrderByDateActionDesc(String utilisateur,
+                                                                                    java.util.Collection<String> typeActions,
+                                                                                    Pageable pageable);
 }

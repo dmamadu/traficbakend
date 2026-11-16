@@ -8,6 +8,7 @@ import com.itma.gestionProjet.repositories.ImageRepository;
 import com.itma.gestionProjet.repositories.UserRepository;
 import com.itma.gestionProjet.services.IImageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +25,26 @@ import java.util.Optional;
 @Service
 public class ImageService  implements IImageService {
 
-    private static final String FOLDER_PATH = "/home/diallomamadou/Documents/ITMA/DATABACKEND/";
+    // Dossier de stockage des fichiers "dossier" sur le disque. Valeur par défaut = ancien chemin codé en dur
+    // (comportement inchangé en production) ; surchargé en local via la variable d'environnement APP_UPLOAD_DIR.
+    @Value("${app.upload.dir:/home/diallomamadou/Documents/ITMA/DATABACKEND/}")
+    private String uploadDir;
+
+    private Path uploadFolder() throws IOException {
+        Path folder = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(folder);
+        return folder;
+    }
+
+    /** Résout un nom de fichier dans le dossier d'upload en refusant tout chemin qui en sortirait ("../"). */
+    private Path resolveInUploadFolder(String fileName) throws IOException {
+        Path folder = uploadFolder();
+        Path target = folder.resolve(fileName).normalize();
+        if (!target.startsWith(folder) || target.equals(folder)) {
+            throw new IOException("Nom de fichier invalide : " + fileName);
+        }
+        return target;
+    }
 
 
     @Autowired
@@ -96,16 +117,17 @@ public class ImageService  implements IImageService {
     @Override
 
     public String uploadImageToFileSystem(MultipartFile file) throws IOException {
-        String filePath=FOLDER_PATH+file.getOriginalFilename();
+        String fileName = file.getOriginalFilename() == null ? "" : Paths.get(file.getOriginalFilename()).getFileName().toString();
+        Path filePath = resolveInUploadFolder(fileName);
 /*
         FileData fileData=fileDataRepository.save(FileData.builder()
                 .name(file.getOriginalFilename())
                 .type(file.getContentType())
                 .filePath(filePath).build());
 */
-        file.transferTo(new File(filePath));
+        file.transferTo(filePath);
 
-            return  file.getOriginalFilename();
+            return  fileName;
 
     }
     /*
@@ -163,8 +185,7 @@ public class ImageService  implements IImageService {
     }
 */
     public byte[] downloadImageFromFileSystem(String fileName) throws IOException {
-        String fullPath = FOLDER_PATH + fileName;
-        byte[] images = Files.readAllBytes(Paths.get(fullPath));
+        byte[] images = Files.readAllBytes(resolveInUploadFolder(fileName));
         return images;
     }
 

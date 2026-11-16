@@ -22,6 +22,7 @@ public interface EntenteRepository extends JpaRepository<Entente, Long> {
     List<Entente> findByEtatProcessus(String etatProcessus);
 
     Page<Entente> findByProjectId(Long projectId, Pageable pageable);
+    List<Entente> findAllByProjectId(Long projectId);
     Page<Entente> findAll(Pageable pageable);
     Optional<Entente> findByCodePap(String codePap);
 

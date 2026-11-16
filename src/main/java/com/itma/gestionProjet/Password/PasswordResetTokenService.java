@@ -2,7 +2,6 @@ package com.itma.gestionProjet.Password;
 
 
 import com.itma.gestionProjet.entities.User;
-import com.itma.gestionProjet.exceptions.EmailAlreadySendException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +17,12 @@ public class PasswordResetTokenService {
     public void createPasswordResetTokenForUser(User user, String passwordToken) {
         Optional<PasswordResetToken> existingToken = passwordResetTokenRepository.findByUserId((long) user.getId());
         if (existingToken.isPresent()) {
-            throw new EmailAlreadySendException("Un mail vous est déja envoyé pour réinitialiser votre mot de passe!!");
-           // PasswordResetToken token = existingToken.get();
-           // token.setToken(passwordToken);
-          //  passwordResetTokenRepository.save(token);
+            // Nouvelle demande : on remplace l'ancien jeton (souvent expiré) au lieu de bloquer l'utilisateur.
+            // Le lien précédent devient invalide, seul le dernier e-mail reçu fonctionne.
+            PasswordResetToken token = existingToken.get();
+            token.setToken(passwordToken);
+            token.setExpirationTime(token.getTokenExpirationTime());
+            passwordResetTokenRepository.save(token);
         } else {
             PasswordResetToken passwordResetToken = new PasswordResetToken(passwordToken, user);
             passwordResetTokenRepository.save(passwordResetToken);

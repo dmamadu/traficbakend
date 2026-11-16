@@ -230,11 +230,18 @@ public class UserController {
         Optional<User> user = userService.findUserByEmail(passwordRequest.getEmail());
         if (user.isPresent()) {
             String passwordResetToken = UUID.randomUUID().toString();
-            String passwordResetUrl = passwordResetEmailLink(user.get(), urlFront+"/#/auth/login-2?token="+passwordResetToken, passwordResetToken);
+            // Le jeton est enregistré AVANT l'envoi : un lien envoyé doit toujours correspondre à un jeton valide.
             userService.createPasswordResetTokenForUser(user.get(), passwordResetToken);
-            return new ApiResponse(HttpStatus.OK.value(), "Un mail vous est envoyé pour réinitialiser votre mot de passe", null);
+            // Page du front qui reçoit le jeton (auth/reset-password ; l'ancienne adresse login-2 n'existait pas)
+            try {
+                passwordResetEmailLink(user.get(), urlFront + "/#/auth/reset-password?token=" + passwordResetToken, passwordResetToken);
+            } catch (org.springframework.mail.MailException | MessagingException e) {
+                return new ApiResponse(HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "L'e-mail de réinitialisation n'a pas pu être envoyé. Réessayez plus tard ou contactez l'administrateur.", null);
+            }
+            return new ApiResponse(HttpStatus.OK.value(), "Un e-mail vous a été envoyé pour réinitialiser votre mot de passe.", null);
         } else {
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "C'est addresse mail n'existe pas dans notre base de données", null);
+            return new ApiResponse(HttpStatus.NOT_FOUND.value(), "Aucun compte n'est associé à cette adresse e-mail.", null);
         }
     }
 
@@ -245,23 +252,30 @@ public class UserController {
 
     @PostMapping("/reset-password")
     public ApiResponse resetPassword(@RequestBody PasswordResetUtil passwordRequestUtil){
-        String token=passwordRequestUtil.getToken();
+        String token = passwordRequestUtil.getToken();
+        String newPassword = passwordRequestUtil.getNewPassword();
         String tokenVerificationResult = userService.validatePasswordResetToken(token);
-     /*
         if (!tokenVerificationResult.equalsIgnoreCase("valid")) {
-            return   new ApiResponse(400,"Invalid token",null);
+            boolean expire = tokenVerificationResult.toLowerCase().contains("expired");
+            return new ApiResponse(400, expire
+                    ? "Ce lien a expiré. Demandez un nouveau lien de réinitialisation."
+                    : "Ce lien de réinitialisation n'est pas valide ou a déjà été utilisé.", null);
         }
-        */
-        if (!tokenVerificationResult.equalsIgnoreCase("valid")) {
-            return new ApiResponse(400, "Invalid password reset token", null);
+        // Même règle que le front (change-password) : 8 caractères, majuscule, minuscule, chiffre, caractère spécial
+        if (newPassword == null || newPassword.length() < 8
+                || !newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d\\s]).+$")) {
+            return new ApiResponse(400, "Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.", null);
         }
         Optional<User> theUser = Optional.ofNullable(userService.findUserByToken(token));
         if (theUser.isPresent()) {
-            userService.changePassword(theUser.get(), passwordRequestUtil.getNewPassword());
+            User user = theUser.get();
+            // L'utilisateur vient de choisir son mot de passe : plus besoin de le forcer à en changer
+            user.setMustChangePassword(false);
+            userService.changePassword(user, newPassword);
             userService.deletePasswordResetToken(token);
-            return new ApiResponse(200, "Password has been reset successfully", null);
+            return new ApiResponse(200, "Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.", null);
         }
-        return new ApiResponse(404, "User not found for this token", null);
+        return new ApiResponse(404, "Aucun compte ne correspond à ce lien.", null);
     }
 
 

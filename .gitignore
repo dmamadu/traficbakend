@@ -37,3 +37,6 @@ application.dev.properties
 src/main/resources/application.properties
 docker-compose.yml
 Dockerfile
+
+# Fichiers uploadés en local
+uploads-local/

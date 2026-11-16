@@ -69,14 +69,15 @@ public class RegistrationCompleteEventListener  implements ApplicationListener<R
     }
 
     public void sendPasswordResetVerificationEmail(String url,User user) throws MessagingException, UnsupportedEncodingException {
-        String subject = "Password Reset Request Verification";
-        String senderName = "User Registration Portal Service";
+        String subject = "INVODIS — Réinitialisation de votre mot de passe";
+        String senderName = "INVODIS";
         String mailContent = "<p>Bonjour " + user.getFirstname() + ",</p>" +
                         "<p><b>Vous avez récemment demandé à réinitialiser votre mot de passe.</b></p>" +
                         "<p>Veuillez suivre le lien ci-dessous pour compléter l'opération :</p>" +
                         "<a class='button' href='" + url + "'>Réinitialiser votre mot de passe</a><br/>" +
-                        "<p>Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet email.</p>" +
-                        "<p>Merci de votre confiance et à bientôt sur notre portail d'enregistrement des utilisateurs.</p>";
+                        "<p>Ce lien est valable 10 minutes et ne peut servir qu'une fois.</p>" +
+                        "<p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe reste inchangé.</p>" +
+                        "<p>L'équipe INVODIS</p>";
         MailRequestDto mailRequestDto = new MailRequestDto();
         mailRequestDto.setTemplate("verification_mail");
         mailRequestDto.setToEmail(user.getEmail());

@@ -231,6 +231,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // ResponseStatusException (ex. 400 de validation dans MeController) : garder son statut et son message
+    // au lieu de tomber dans le gestionnaire RuntimeException (500).
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<AApiResponse<String>> handleResponseStatusException(
+            org.springframework.web.server.ResponseStatusException ex) {
+        AApiResponse<String> response = new AApiResponse<>();
+        response.setResponseCode(ex.getStatusCode().value());
+        response.setData(List.of());
+        response.setMessage(ex.getReason() != null ? ex.getReason() : "Requête invalide.");
+        return new ResponseEntity<>(response, ex.getStatusCode());
+    }
+
     // Gestion des accès refusés par @PreAuthorize
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<AApiResponse<String>> handleAccessDeniedException(AccessDeniedException ex) {

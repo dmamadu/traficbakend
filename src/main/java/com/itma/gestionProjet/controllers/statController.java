@@ -1,10 +1,13 @@
 package com.itma.gestionProjet.controllers;
 
 import com.itma.gestionProjet.dtos.AvancementStats;
+import com.itma.gestionProjet.dtos.BaselineStats;
 import com.itma.gestionProjet.dtos.CategoryStats;
 import com.itma.gestionProjet.dtos.CombinedStatsResponse;
 import com.itma.gestionProjet.dtos.CriterionStats;
+import com.itma.gestionProjet.dtos.DossierEtapeDto;
 import com.itma.gestionProjet.dtos.DossiersStats;
+import com.itma.gestionProjet.dtos.MiseEnOeuvreStats;
 import com.itma.gestionProjet.entities.EtatProcessusEntente;
 import com.itma.gestionProjet.entities.StatutEntente;
 import com.itma.gestionProjet.helpers.StatsHelper;
@@ -12,6 +15,10 @@ import com.itma.gestionProjet.repositories.EntenteRepository;
 import com.itma.gestionProjet.services.DatabasePapAgricoleService;
 import com.itma.gestionProjet.services.DatabasePapPlaceAffaireService;
 import com.itma.gestionProjet.services.DatabasePapHabitatService;
+import com.itma.gestionProjet.services.BaselineStatsService;
+import com.itma.gestionProjet.services.MiseEnOeuvreStatsService;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,6 +51,47 @@ public class statController {
 
     @Autowired
     private EntenteRepository ententeRepository;
+
+    @Autowired
+    private MiseEnOeuvreStatsService miseEnOeuvreStatsService;
+
+    @Autowired
+    private BaselineStatsService baselineStatsService;
+
+    // Tableau de bord « BaseLine PAR » : effectifs, sexe, vulnérabilités, avancement des
+    // indemnisations et points de la carte. zone = commune ; categorie = placeAffaire | agricole | habitat.
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DASHBOARD_BASELINE_VOIR')")
+    @GetMapping("/baseline")
+    public BaselineStats getBaseline(
+            @RequestParam Long projectId,
+            @RequestParam(required = false) String zone,
+            @RequestParam(required = false) String categorie) {
+        return baselineStatsService.getStats(projectId, zone, categorie);
+    }
+
+    // Tableau de bord « Mise en œuvre du PAR » : montants, étapes, paiements par catégorie, alertes.
+    // zone = commune de la PAP ; debut/fin (yyyy-MM-dd) ne filtrent que les paiements et finalisations.
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DASHBOARD_MISE_EN_OEUVRE_VOIR')")
+    @GetMapping("/mise-en-oeuvre")
+    public MiseEnOeuvreStats getMiseEnOeuvre(
+            @RequestParam Long projectId,
+            @RequestParam(required = false) String zone,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate debut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
+        return miseEnOeuvreStatsService.getStats(projectId, zone, debut, fin);
+    }
+
+    // Dossiers d'une étape du processus d'entente, triés du plus ancien dans l'étape au plus récent.
+    @PreAuthorize("@permissionChecker.has(#projectId, 'DASHBOARD_MISE_EN_OEUVRE_VOIR')")
+    @GetMapping("/mise-en-oeuvre/dossiers")
+    public Page<DossierEtapeDto> getDossiersEtape(
+            @RequestParam Long projectId,
+            @RequestParam EtatProcessusEntente etape,
+            @RequestParam(required = false) String zone,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return miseEnOeuvreStatsService.getDossiers(projectId, etape, zone, page, size);
+    }
 
     // Alimente à la fois /dashboards/jobs (DASHBOARD_BASELINE) et /dashboards/miseEnOeuvre
     // (DASHBOARD_MISE_EN_OEUVRE) — accessible dès qu'on a le droit de voir l'un des deux.
