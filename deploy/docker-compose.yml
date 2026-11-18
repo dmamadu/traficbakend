@@ -73,7 +73,9 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
-      - "127.0.0.1:9001:9001" # console, via tunnel SSH uniquement
+      # console, via tunnel SSH uniquement (ssh -L 9101:127.0.0.1:9101 …) ;
+      # port hôte 9101 car 9001 est déjà pris sur le VPS par le MinIO actuel
+      - "127.0.0.1:9101:9001"
     volumes:
       - minio_data:/data
 
