@@ -129,7 +129,7 @@ cmd_db() {
   ok "export complet : $(du -h "$f" | cut -f1)"
 
   step "Démarrage du nouveau MySQL"
-  docker compose up -d mysql >/dev/null 2>&1
+  docker compose up -d --quiet-pull mysql || die "docker compose a échoué (message ci-dessus)"
   wait_healthy mysql 120 || die "le nouveau MySQL ne démarre pas (docker compose logs mysql)"
   local NEW_DB; NEW_DB="$(docker compose ps -q mysql)"
   ok "prêt"
@@ -156,7 +156,7 @@ cmd_db() {
 cmd_files() {
   local b; b="$(old_bucket)"
   step "Démarrage du nouveau MinIO"
-  docker compose up -d minio >/dev/null 2>&1
+  docker compose up -d --quiet-pull minio || die "docker compose a échoué (message ci-dessus)"
   sleep 5; ok "démarré"
 
   step "Copie du bucket « $b » (prod → nouvelle pile)"
@@ -171,7 +171,7 @@ cmd_start() {
   step "Versions : backend $bt, frontend $ft, bucket $b"
   set_dotenv BACKEND_TAG "$bt"; set_dotenv FRONTEND_TAG "$ft"; set_dotenv MINIO_BUCKET_NAME "$b"
 
-  docker compose up -d backend frontend >/dev/null 2>&1
+  docker compose up -d --quiet-pull backend frontend || die "docker compose a échoué (message ci-dessus)"
   local code
   code="$(wait_http http://127.0.0.1:8081/ 180)" && ok "backend répond (HTTP $code, 401 attendu)" || { docker compose logs --tail=40 backend; die "le backend ne répond pas"; }
   code="$(wait_http http://127.0.0.1:8080/ 60)"  && ok "frontend répond (HTTP $code)"           || die "le frontend ne répond pas"
@@ -199,13 +199,13 @@ cmd_bascule() {
   cmd_files
 
   step "Redémarrage du backend de la nouvelle pile sur la base finale"
-  docker compose restart backend >/dev/null 2>&1
+  docker compose restart backend || die "redémarrage du backend impossible : ./migrate-from-dokploy.sh retour"
   wait_http http://127.0.0.1:8081/ 180 >/dev/null && ok "backend prêt" || die "backend KO : ./migrate-from-dokploy.sh retour"
 
   step "Traefik → Caddy"
   docker update --restart=no "$TRAEFIK" >/dev/null
   docker stop "$TRAEFIK" >/dev/null && ok "Traefik arrêté (ne redémarrera plus au reboot)"
-  docker compose up -d caddy >/dev/null 2>&1 && ok "Caddy démarré"
+  docker compose up -d --quiet-pull caddy || die "Caddy ne démarre pas : ./migrate-from-dokploy.sh retour"; ok "Caddy démarré"
 
   step "Certificats HTTPS (jusqu'à 2 min)"
   local i
@@ -224,7 +224,7 @@ cmd_bascule() {
 cmd_retour() {
   echo "Retour à Dokploy. Les saisies faites sur la nouvelle pile depuis la bascule NE SERONT PAS reprises."
   read -r -p "Taper OUI pour continuer : " r; [[ "$r" == OUI ]] || die "annulé"
-  docker compose stop caddy backend >/dev/null 2>&1 && ok "Caddy et nouveau backend arrêtés"
+  docker compose stop caddy backend && ok "Caddy et nouveau backend arrêtés"
   docker update --restart="$(cat .traefik-restart-policy 2>/dev/null || echo always)" "$TRAEFIK" >/dev/null
   docker start "$TRAEFIK" >/dev/null && ok "Traefik relancé"
   docker service scale -d "$OLD_BACK_SERVICE=1" >/dev/null && ok "backend Dokploy relancé"
