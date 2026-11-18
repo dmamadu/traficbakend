@@ -97,7 +97,10 @@ mc_run() { # script mc ; alias « old » et « new » déjà définis
   docker run --rm --network "$NET" -e OLD_MK -e OLD_MS -e NEW_MK -e NEW_MS -e BUCKET="$2" -e OLD_URL="$OLD_MINIO_URL" \
     --entrypoint sh minio/minio:latest -c '
       mc alias set old "$OLD_URL" "$OLD_MK" "$OLD_MS" >/dev/null &&
-      mc alias set new http://minio:9000 "$NEW_MK" "$NEW_MS" >/dev/null && '"$1"
+      i=0; until mc alias set new http://minio:9000 "$NEW_MK" "$NEW_MS" >/dev/null 2>&1; do
+        i=$((i + 1)); [ "$i" -gt 60 ] && { echo "  ✖ le nouveau MinIO ne répond pas après 3 min" >&2; exit 1; }
+        sleep 3
+      done && '"$1"
 }
 
 # ---------------------------------------------------------------------------------------------------------
