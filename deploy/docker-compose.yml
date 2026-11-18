@@ -1,0 +1,96 @@
+# Production INVODIS sur le VPS — à copier dans /opt/invodis/ avec deploy.sh et .env.
+# Les versions déployées sont dans .env (BACKEND_TAG, FRONTEND_TAG), mises à jour par deploy.sh.
+#
+# Caddy fait le HTTPS (remplace le Traefik de Dokploy) et sert invodis.com / api.invodis.com (voir Caddyfile).
+# backend et frontend ne sont publiés que sur 127.0.0.1 : utilisés par deploy.sh pour vérifier qu'ils répondent.
+
+name: invodis
+
+services:
+  backend:
+    image: ghcr.io/dmamadu/invodis-backend:${BACKEND_TAG:?BACKEND_TAG manquant dans .env}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/gestionProjet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DATASOURCE_USERNAME: ${DATASOURCE_USERNAME}
+      DATASOURCE_PASSWORD: ${DATASOURCE_PASSWORD}
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+      JPA_SHOW_SQL: "false"
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY:-placeholder}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY:-placeholder}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-placeholder}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_SUPPORT_MAIL: ${APP_SUPPORT_MAIL}
+      APP_FRONT_URL: ${APP_FRONT_URL:-https://invodis.com}
+      APP_UPLOAD_DIR: /data/uploads/
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  frontend:
+    image: ghcr.io/dmamadu/invodis-frontend:${FRONTEND_TAG:?FRONTEND_TAG manquant dans .env}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: gestionProjet
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${DATASOURCE_USERNAME}
+      MYSQL_PASSWORD: ${DATASOURCE_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest # même image qu’en local ; fixer une version RELEASE.* une fois la prod stable
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    ports:
+      - "127.0.0.1:9001:9001" # console, via tunnel SSH uniquement
+    volumes:
+      - minio_data:/data
+
+  # Reverse proxy HTTPS (certificats Let's Encrypt automatiques)
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [backend, frontend]
+
+volumes:
+  mysql_data:
+  minio_data:
+  uploads:
+  caddy_data:

@@ -1,0 +1,16 @@
+# Ne jamais envoyer dans l'image
+.git
+.github
+.idea
+.vscode
+target
+uploads-local
+deploy
+*.jpg
+*.md
+.env
+.env.*
+
+# TEC-04 : fichiers de configuration avec des secrets en clair, suivis par Git.
+# Exclus ici pour qu'ils n'entrent pas dans le .jar ; à supprimer du dépôt et secrets à changer.
+src/main/resources/static/uploads/application.properties.*

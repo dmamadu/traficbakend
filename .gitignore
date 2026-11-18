@@ -40,3 +40,6 @@ Dockerfile
 
 # Fichiers uploadés en local
 uploads-local/
+
+# Pile de production (déploiement sur le VPS), à suivre malgré la règle docker-compose.yml ci-dessus
+!deploy/docker-compose.yml

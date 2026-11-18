@@ -1,0 +1,45 @@
+# Déploiement en production, lancé à la main : Actions → Deploy backend → Run workflow.
+# La version est un tag d'image déjà publié par build.yml (ex. 1.4.0 ou sha-a1b2c3d).
+# Pour revenir en arrière : relancer avec l'ancienne version.
+name: Deploy backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à déployer (ex. 1.4.0 ou sha-a1b2c3d)"
+        required: true
+        type: string
+
+# Un seul déploiement backend à la fois
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérification de la version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+            echo "::error::Version invalide : lettres, chiffres, . _ - uniquement"
+            exit 1
+          fi
+
+      - name: Déploiement sur le VPS
+        uses: appleboy/ssh-action@v1
+        env:
+          VERSION: ${{ inputs.version }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: VERSION
+          script: /opt/invodis/deploy.sh backend "$VERSION"
+
+      - name: Résumé
+        run: echo "### Backend ${{ inputs.version }} déployé par ${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"

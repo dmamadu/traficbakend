@@ -1,0 +1,15 @@
+# Reverse proxy HTTPS d'INVODIS (remplace le Traefik de Dokploy).
+# Certificats obtenus et renouvelés automatiquement : les DNS doivent pointer vers le VPS, ports 80/443 libres.
+
+invodis.com, www.invodis.com {
+	encode gzip
+	reverse_proxy frontend:80
+}
+
+api.invodis.com {
+	encode gzip
+	request_body {
+		max_size 12MB
+	}
+	reverse_proxy backend:8081
+}
