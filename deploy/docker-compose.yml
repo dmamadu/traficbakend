@@ -66,7 +66,10 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest # même image qu’en local ; fixer une version RELEASE.* une fois la prod stable
+    # MinIO ne publie plus d'images sur Docker Hub (fin 2025) : on réutilise celle déjà présente sur le VPS
+    # (pas de téléchargement). À remplacer à terme par une source maintenue.
+    image: minio/minio:latest
+    pull_policy: never
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:

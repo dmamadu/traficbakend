@@ -91,10 +91,11 @@ count_rows() { # conteneur
 }
 
 mc_run() { # script mc ; alias « old » et « new » déjà définis
+  # mc vient de l'image serveur MinIO, déjà présente sur le VPS : MinIO ne publie plus d'images sur Docker Hub
   old_minio_creds
   OLD_MK="$OLD_MK" OLD_MS="$OLD_MS" NEW_MK="$(dotenv MINIO_ACCESS_KEY)" NEW_MS="$(dotenv MINIO_SECRET_KEY)" \
   docker run --rm --network "$NET" -e OLD_MK -e OLD_MS -e NEW_MK -e NEW_MS -e BUCKET="$2" -e OLD_URL="$OLD_MINIO_URL" \
-    --entrypoint sh minio/mc:latest -c '
+    --entrypoint sh minio/minio:latest -c '
       mc alias set old "$OLD_URL" "$OLD_MK" "$OLD_MS" >/dev/null &&
       mc alias set new http://minio:9000 "$NEW_MK" "$NEW_MS" >/dev/null && '"$1"
 }
