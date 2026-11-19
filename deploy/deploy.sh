@@ -24,8 +24,8 @@ cd "$DIR"
 exec 9>"$DIR/.deploy.lock"
 # Un seul déploiement à la fois (backend et frontend modifient le même .env) : le second attend son tour
 if ! flock -n 9; then
-  echo "▶ Un autre déploiement est en cours : attente (10 min max)…"
-  flock -w 600 9 || { echo "✖ Toujours occupé après 10 min, abandon."; exit 1; }
+  echo "▶ Un autre déploiement est en cours : attente (5 min max)…"
+  flock -w 300 9 || { echo "✖ Toujours occupé après 5 min, abandon."; exit 1; }
 fi
 
 OLD="$(grep -E "^${VAR}=" .env | cut -d= -f2- || true)"
