@@ -1,26 +1,28 @@
 # Déploiement INVODIS
 
 ```
-push sur main ──► Build backend / Build frontend ──► ghcr.io/dmamadu/invodis-{backend,frontend}:sha-xxxxxxx
-tag v1.4.0    ──►            (automatique)       ──►                                            :1.4.0
+push sur main ──► Build backend|frontend ──► image sha-xxxxxxx ──► Deploy backend|frontend ──SSH──► deploy.sh
+                         (auto)                                     (auto si le build a réussi)
 
-Actions → Deploy backend|frontend → Run workflow (version) ──SSH──► /opt/invodis/deploy.sh ──► docker compose
-                         (manuel)
+Actions → Deploy backend|frontend → Run workflow (version) ──SSH──► /opt/invodis/deploy.sh   (manuel, retour arrière)
 ```
 
-Rien ne part en production sans clic sur **Run workflow** (ou `./deploy.sh` lancé sur le VPS).
+**Chaque push sur `main` part en production** dès que son *Build* a réussi. Travailler sur une branche et ne
+fusionner dans `main` que ce qui est prêt. Un build en échec ne déploie rien ; un backend qui ne répond pas
+après le déploiement est remplacé automatiquement par la version précédente.
 
 ## Publier une version
 
-- Chaque push sur `main` publie une image `sha-<7 premiers caractères du commit>`.
-- Pour une version nommée : `git tag v1.4.0 && git push origin v1.4.0` → image `1.4.0`.
-- Le résumé du workflow *Build* donne la version à saisir pour le déploiement.
+- Chaque push sur `main` publie une image `sha-<7 premiers caractères du commit>` et la déploie.
+- Pour une version nommée : `git tag v1.4.0 && git push origin v1.4.0` → image `1.4.0` (pas de déploiement
+  automatique pour les tags : le déployer avec **Run workflow**).
 
-## Déployer / revenir en arrière
+## Déployer à la main / revenir en arrière
 
 GitHub → **Actions** → **Deploy backend** (ou **Deploy frontend**) → **Run workflow** → version.
 
-Revenir en arrière = relancer avec la version précédente (voir `/opt/invodis/deploy.log`).
+Revenir en arrière = relancer avec la version précédente (voir `/opt/invodis/deploy.log`). Attention : le
+push suivant sur `main` redéploiera automatiquement la dernière version de `main`.
 
 Sur le VPS, sans passer par GitHub :
 

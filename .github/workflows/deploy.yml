@@ -1,9 +1,15 @@
-# Déploiement en production, lancé à la main : Actions → Deploy backend → Run workflow.
-# La version est un tag d'image déjà publié par build.yml (ex. 1.4.0 ou sha-a1b2c3d).
-# Pour revenir en arrière : relancer avec l'ancienne version.
+# Déploiement en production du backend.
+#  - Automatique : après chaque « Build backend » réussi sur main (push), déploie l'image sha-<commit>.
+#  - Manuel      : Actions → Deploy backend → Run workflow → version (ex. 1.4.0 ou sha-a1b2c3d).
+#                  Sert à revenir en arrière : relancer avec la version précédente (voir /opt/invodis/deploy.log).
+# deploy.sh sauvegarde la base avant, et remet l'ancienne version si le backend ne répond pas.
 name: Deploy backend
 
 on:
+  workflow_run:
+    workflows: ["Build backend"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -11,23 +17,31 @@ on:
         required: true
         type: string
 
-# Un seul déploiement backend à la fois
+# Un seul déploiement backend à la fois ; un déploiement en attente est remplacé par le plus récent
 concurrency:
   group: deploy-backend
   cancel-in-progress: false
 
 jobs:
   deploy:
+    # Automatique : seulement si le build a réussi (un build en échec ne déploie rien)
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Vérification de la version
+      - name: Version à déployer
         id: version
         env:
-          VERSION: ${{ inputs.version }}
+          INPUT_VERSION: ${{ inputs.version }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          # Espaces copiés-collés avant / après la version : on les retire
-          VERSION="${VERSION#"${VERSION%%[![:space:]]*}"}"
-          VERSION="${VERSION%"${VERSION##*[![:space:]]}"}"
+          if [[ -n "$INPUT_VERSION" ]]; then
+            VERSION="$INPUT_VERSION"
+            # Espaces copiés-collés avant / après la version : on les retire
+            VERSION="${VERSION#"${VERSION%%[![:space:]]*}"}"
+            VERSION="${VERSION%"${VERSION##*[![:space:]]}"}"
+          else
+            VERSION="sha-${HEAD_SHA:0:7}"   # même tag que celui publié par build.yml
+          fi
           if ! [[ "$VERSION" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
             echo "::error::Version invalide « $VERSION » : lettres, chiffres, . _ - uniquement (ex. sha-a1b2c3d)"
             exit 1
@@ -49,4 +63,5 @@ jobs:
       - name: Résumé
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: echo "### Backend $VERSION déployé par $GITHUB_ACTOR" >> "$GITHUB_STEP_SUMMARY"
+          MODE: ${{ github.event_name == 'workflow_dispatch' && 'manuel' || 'automatique' }}
+        run: echo "### Backend $VERSION déployé ($MODE) par $GITHUB_ACTOR" >> "$GITHUB_STEP_SUMMARY"
