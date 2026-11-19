@@ -21,18 +21,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Vérification de la version
+        id: version
         env:
           VERSION: ${{ inputs.version }}
         run: |
+          # Espaces copiés-collés avant / après la version : on les retire
+          VERSION="${VERSION#"${VERSION%%[![:space:]]*}"}"
+          VERSION="${VERSION%"${VERSION##*[![:space:]]}"}"
           if ! [[ "$VERSION" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
-            echo "::error::Version invalide : lettres, chiffres, . _ - uniquement"
+            echo "::error::Version invalide « $VERSION » : lettres, chiffres, . _ - uniquement (ex. sha-a1b2c3d)"
             exit 1
           fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Déploiement sur le VPS
         uses: appleboy/ssh-action@v1
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -42,4 +47,6 @@ jobs:
           script: /opt/invodis/deploy.sh backend "$VERSION"
 
       - name: Résumé
-        run: echo "### Backend ${{ inputs.version }} déployé par ${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: echo "### Backend $VERSION déployé par $GITHUB_ACTOR" >> "$GITHUB_STEP_SUMMARY"
