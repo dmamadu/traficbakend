@@ -22,6 +22,8 @@ public interface PlainteService {
     void deleteAllByIds(List<Long> ids);
     List<PlainteDto> createPlaintes(List<PlainteRequest> plainteRequests);
     AApiResponse<PlainteDto> getPlainteByCodePap(String codePap, int page, int size);
+
+    AApiResponse<PlainteDto> getPlainteByCodePap(String codePap, Long projectId, int page, int size);
     AApiResponse<PlainteDto> searchGlobalPlaintes(String searchTerm, Optional<Long> projectId, int page, int size);
     PlainteImportResultDto importerDepuisExcel(MultipartFile file, Long projectId);
 }

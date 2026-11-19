@@ -115,6 +115,13 @@ public class EntenteCompensationPapServiceImpl implements EntenteCompensationPap
     }
 
     @Override
+    public EntenteCompensationPapDto getEntenteByCodePap(String codePap, Long projectId) {
+        EntenteCompensationPap entente = repository.findFirstByCodePapAndProjectIdOrderByIdDesc(codePap, projectId)
+                .orElseThrow(() -> new RuntimeException("Entente not found with codePap: " + codePap));
+        return modelMapper.map(entente, EntenteCompensationPapDto.class);
+    }
+
+    @Override
     public Page<EntenteCompensationPapDto> searchGlobalEntenteCompensationPap(String searchTerm, Optional<Long> projectId, Pageable pageable) {
         Page<EntenteCompensationPap> pageResult = repository.searchGlobal(searchTerm,projectId, pageable);
         return pageResult.map(this::convertEntityToDto);

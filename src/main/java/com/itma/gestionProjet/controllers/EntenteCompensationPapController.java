@@ -153,7 +153,7 @@ public class EntenteCompensationPapController {
     @GetMapping("/byCodePap")
     public ResponseEntity<AApiResponse> getEntenteByCodePap(@RequestParam String codePap, @RequestParam Long projectId) {
         try {
-            EntenteCompensationPapDto entente = ententeService.getEntenteByCodePap(codePap);
+            EntenteCompensationPapDto entente = ententeService.getEntenteByCodePap(codePap, projectId);
             List<EntenteCompensationPapDto> data = Collections.singletonList(entente);
             AApiResponse<EntenteCompensationPapDto> response = new AApiResponse<>(
                     200,

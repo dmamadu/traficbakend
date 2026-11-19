@@ -25,6 +25,10 @@ public interface PlainteRepository extends JpaRepository<Plainte, Long> {
 
     Page<Plainte> findByCodePap(String codePap, Pageable pageable);
 
+    /** Plaintes d'une PAP dans un projet (les plaintes anciennes sans projectId restent visibles). */
+    @Query("SELECT p FROM Plainte p WHERE p.codePap = :codePap AND (p.projectId = :projectId OR p.projectId IS NULL)")
+    Page<Plainte> findByCodePapDansProjet(@Param("codePap") String codePap, @Param("projectId") Long projectId, Pageable pageable);
+
     Optional<List<Plainte>> findByCodePap(String codePap);
 
     List<Plainte> findByProjectIdAndStatut(Long projectId, String statut);

@@ -131,6 +131,19 @@ public class PlainteServiceImpl implements PlainteService {
         return response;
     }
 
+    /** Fiche PAP : plaintes de la PAP dans le projet. Liste vide = 200 (pas une erreur). */
+    @Override
+    public AApiResponse<PlainteDto> getPlainteByCodePap(String codePap, Long projectId, int page, int size) {
+        Page<Plainte> plaintesPage = plainteRepository.findByCodePapDansProjet(
+                codePap, projectId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 500)));
+        AApiResponse<PlainteDto> response = new AApiResponse<>();
+        response.setResponseCode(200);
+        response.setData(plaintesPage.stream().map(this::convertEntityToDto).collect(Collectors.toList()));
+        response.setMessage(plaintesPage.isEmpty() ? "Aucune plainte pour cette PAP." : "Plaintes trouvées avec succès.");
+        response.setLength(plaintesPage.getTotalElements());
+        return response;
+    }
+
     @Override
     public AApiResponse<PlainteDto> searchGlobalPlaintes(String searchTerm, Optional<Long> projectId, int page, int size) {
         try {

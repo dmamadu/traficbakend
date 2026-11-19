@@ -179,10 +179,11 @@ public class PlainteController {
     @GetMapping("/by-codePap")
     public ResponseEntity<AApiResponse<PlainteDto>> getPlainteByCodePap(
             @RequestParam String codePap,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int max,
             @RequestParam Long projectId) {
-        AApiResponse<PlainteDto> response = plainteService.getPlainteByCodePap(codePap, page, size);
+        // offset = numéro de page, max = taille de page (mêmes noms que les autres endpoints by-codePap)
+        AApiResponse<PlainteDto> response = plainteService.getPlainteByCodePap(codePap, projectId, offset, max);
         return ResponseEntity.status(response.getResponseCode()).body(response);
     }
 

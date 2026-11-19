@@ -97,6 +97,7 @@ public class UserRegistrationSecurityConfig {
                         CorsConfiguration cors = new CorsConfiguration();
                         cors.setAllowedOrigins(Arrays.asList(
                                 "http://localhost:4200",
+                                "http://localhost:4201",
                                 "https://testsolutiondigital.com",
                                 "https://www.testsolutiondigital.com",
                                 "http://localhost:8080",

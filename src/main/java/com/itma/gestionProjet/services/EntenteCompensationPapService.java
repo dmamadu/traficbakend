@@ -22,6 +22,8 @@ public interface EntenteCompensationPapService {
 
     EntenteCompensationPapDto getEntenteByCodePap(String codePap);
 
+    EntenteCompensationPapDto getEntenteByCodePap(String codePap, Long projectId);
+
 
     // Nouvelle méthode pour la recherche globale
     Page<EntenteCompensationPapDto> searchGlobalEntenteCompensationPap(String searchTerm, Optional<Long> projectId, Pageable pageable);

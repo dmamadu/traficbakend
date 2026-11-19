@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface EntenteCompensationPapRepository extends JpaRepository<EntenteCompensationPap, Long> {
     Page<EntenteCompensationPap> findByProjectId(Long projectId, Pageable pageable);
     Optional<EntenteCompensationPap> findByCodePap(String codePap);
+    Optional<EntenteCompensationPap> findFirstByCodePapAndProjectIdOrderByIdDesc(String codePap, Long projectId);
     boolean existsByCodePap(String codePap);
 
 
