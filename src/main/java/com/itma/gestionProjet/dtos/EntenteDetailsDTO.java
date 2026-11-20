@@ -134,6 +134,11 @@ public class EntenteDetailsDTO {
     private LocalDateTime dateAccordPap;
     private LocalDateTime dateInformationPap;
 
+    // Pièces du processus : signature de la PAP (accord) et preuve de paiement (URL de fichier)
+    private String preuveAccord;
+    private String referencePaiement;
+    private LocalDateTime dateEtablissementCompensation;
+
 
 
 }
