@@ -138,6 +138,9 @@ public class EntenteService {
 
         dto.setModeInformation(entente.getModeInformation());
         dto.setDetailsInformation(entente.getDetailsInformation());
+        dto.setPreuveAccord(entente.getPreuveAccord());
+        dto.setReferencePaiement(entente.getReferencePaiement());
+        dto.setDateEtablissementCompensation(entente.getDateEtablissementCompensation());
 
         dto.setDateFormation(entente.getDateFormation());
         dto.setDateInformationPap(entente.getDateInformationPap());
